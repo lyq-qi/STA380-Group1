@@ -81,6 +81,7 @@ old = ggplot(data=old_building,aes(x=green_rating, y=Rent)) + geom_boxplot()
 new
 mid
 old
+#comment
 
 #taking a closer look at the specific value, rent for green increases until around the median age of 22 then it decreases slightly but still higher then when its new
 new_rent = median(new_building[new_building$green_rating == 1,]$Rent)#26.75
