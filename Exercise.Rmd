@@ -1,0 +1,89 @@
+---
+title: "Exercise"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## green buildings
+```{r}
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+library(ggalt)
+
+gb = read.csv("greenbuildings.csv")
+gb$net = as.factor(gb$net)
+gb$green_rating = as.factor(gb$green_rating)
+gb$LEED = as.factor(gb$LEED)
+gb$Energystar = as.factor(gb$Energystar)
+gb$renovated = as.factor(gb$renovated)
+avg_age = median(gb[gb$green_rating == 1,]$age)
+
+new_building = gb %>% filter(age <= 10 )
+mid_building = gb %>% filter(age > 10 & age <= avg_age)
+old_building =gb %>% filter(age >= 30 )
+
+#based on these plots, we saw that as age increases, the buildings with green rating increases in rent
+new = ggplot(data=new_building,aes(x=green_rating, y=Rent)) + geom_boxplot()  
+mid = ggplot(data=mid_building,aes(x=green_rating, y=Rent)) + geom_boxplot()                        
+old = ggplot(data=old_building,aes(x=green_rating, y=Rent)) + geom_boxplot() 
+
+new
+mid
+old
+
+#taking a closer look at the specific value, rent for green increases until around the median age of 22 then it decreases slightly but still higher then when its new
+new_rent = median(new_building[new_building$green_rating == 1,]$Rent)#26.75
+mid_rent = median(mid_building[mid_building$green_rating == 1,]$Rent)#29
+old_rent = median(old_building[old_building$green_rating == 1,]$Rent)#28.9
+
+theme_set(theme_classic())
+
+g1 <- ggplot(gb, aes(Rent)) + scale_fill_brewer(palette = "Spectral") +                geom_histogram(aes(fill=stories),binwidth = 2, 
+                   col="black", 
+                   size=.1)
+
+g1 + facet_wrap( ~ green_rating) + 
+    labs(title="Distribution of rent across all buildings", y="Number of buildings", x="Rent")
+
+# Zoom in without deleting the points outside the limits.
+g1 + facet_wrap( ~ green_rating) + coord_cartesian(xlim=c(0,100)) +
+    labs(title="Distribution of rent across all buildings", subtitle="Rent below $100",
+    y="Number of buildings", x="Rent")
+
+# Zoom in to take a look at the extreme case.
+g1 + facet_wrap( ~ green_rating) + coord_cartesian(xlim=c(100,300),ylim=c(0,25)) +
+  labs(title="Distribution of rent across all buildings", subtitle="Rent above $100",
+    y="Number of buildings", x="Rent")
+
+g2 <- ggplot(gb, aes(leasing_rate)) + scale_fill_brewer(palette = "Spectral") +                geom_density(aes(fill=factor(green_rating)), alpha=0.8)
+g2 + facet_wrap( ~ green_rating) + 
+    labs(title="Distribution of leasing rate across all buildings", y="Density", x="Leasing Rate")
+
+story15 = dplyr::filter(gb,stories==15)
+story15.class = story15 %>% filter(class_a == 0 & class_b == 0)
+
+theme_set(theme_bw())
+g3 <- ggplot(story15, aes(leasing_rate,Rent))
+g3 + geom_point(aes(col=green_rating, size=age)) + 
+     geom_encircle(aes(x=leasing_rate, y=Rent), 
+                data=story15.class, 
+                color="red", 
+                size=2, 
+                expand=0.08)
+```
+
+
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
