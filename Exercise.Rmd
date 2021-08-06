@@ -238,4 +238,5 @@ paste0("Expected profit difference between a green and non-green building: ", ro
 paste0("Expected payback period: ", round(paybackPeriod,2))
 ```
 
-In conclusion, we suggest that the Austin real-estate developer should only compete in the non class a market if they decided to make a green building. That is because a class b green building will generate more profit resulting in a shorter pay back period. 
+In conclusion, we suggest that the Austin real-estate developer should only compete in the non class a market if they decided to make a green building. That is because a non class a green building will generate more profit resulting in a shorter pay back period. 
+# office hour note: can use logistic regression on y (green_Rating) and x (class_a) to see if x has a significant impact on y. 
