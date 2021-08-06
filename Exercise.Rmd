@@ -13,7 +13,6 @@ library(dplyr)
 library(ggplot2)
 library(tidyverse)
 library(ggalt)
-
 gb = read.csv("greenbuildings.csv")
 gb$net = as.factor(gb$net)
 gb$green_rating = as.factor(gb$green_rating)
@@ -21,25 +20,9 @@ gb$LEED = as.factor(gb$LEED)
 gb$Energystar = as.factor(gb$Energystar)
 gb$renovated = as.factor(gb$renovated)
 avg_age = median(gb[gb$green_rating == 1,]$age)
+```
 
-new_building = gb %>% filter(age <= 10 )
-mid_building = gb %>% filter(age > 10 & age <= avg_age)
-old_building =gb %>% filter(age >= 30 )
-
-#based on these plots, we saw that as age increases, the buildings with green rating increases in rent
-new = ggplot(data=new_building,aes(x=green_rating, y=Rent)) + geom_boxplot()  
-mid = ggplot(data=mid_building,aes(x=green_rating, y=Rent)) + geom_boxplot()                        
-old = ggplot(data=old_building,aes(x=green_rating, y=Rent)) + geom_boxplot() 
-
-new
-mid
-old
-
-#taking a closer look at the specific value, rent for green increases until around the median age of 22 then it decreases slightly but still higher then when its new
-new_rent = median(new_building[new_building$green_rating == 1,]$Rent)#26.75
-mid_rent = median(mid_building[mid_building$green_rating == 1,]$Rent)#29
-old_rent = median(old_building[old_building$green_rating == 1,]$Rent)#28.9
-
+```{r}
 theme_set(theme_classic())
 
 g1 <- ggplot(gb, aes(Rent)) + scale_fill_brewer(palette = "Spectral") +                geom_histogram(aes(fill=stories),binwidth = 2, 
@@ -63,6 +46,15 @@ g2 <- ggplot(gb, aes(leasing_rate)) + scale_fill_brewer(palette = "Spectral") + 
 g2 + facet_wrap( ~ green_rating) + 
     labs(title="Distribution of leasing rate across all buildings", y="Density", x="Leasing Rate")
 
+
+# There are many factors that can have an effect on rent, like location, building quality, appliances and Other amenities, tenant/use mix, etc. Now we know that the target project is a new 15-story mixed-use building on East Cesar Chavez, just across I-35 from downtown. Since we have story information in the dataset, let's focus on the situation of 15-story buildings.
+
+# From the graphic, we can conclude that among 15-story building:
+# 1.the average rent of green buildings is higher than that of non-green buildings;
+# 2.the average occupancy rate of green buildings is higher than that of non-green buildings;
+# 3.all green buildings have a class of a or b (however, does this bring extra cost)?
+
+
 story15 = dplyr::filter(gb,stories==15)
 story15.class = story15 %>% filter(class_a == 0 & class_b == 0)
 
@@ -76,14 +68,25 @@ g3 + geom_point(aes(col=green_rating, size=age)) +
                 expand=0.08)
 ```
 
+```{r}
+new_building = gb %>% filter(age <= 10 )
+mid_building = gb %>% filter(age > 10 & age <= avg_age)
+old_building =gb %>% filter(age >= 30 )
 
+#based on these plots, we saw that as age increases, the buildings with green rating increases in rent
+new = ggplot(data=new_building,aes(x=green_rating, y=Rent)) + geom_boxplot()  
+mid = ggplot(data=mid_building,aes(x=green_rating, y=Rent)) + geom_boxplot()                        
+old = ggplot(data=old_building,aes(x=green_rating, y=Rent)) + geom_boxplot() 
 
-## Including Plots
+new
+mid
+old
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+#taking a closer look at the specific value, rent for green increases until around the median age of 22 then it decreases slightly but still higher then when its new
+new_rent = median(new_building[new_building$green_rating == 1,]$Rent)#26.75
+mid_rent = median(mid_building[mid_building$green_rating == 1,]$Rent)#29
+old_rent = median(old_building[old_building$green_rating == 1,]$Rent)#28.9
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
