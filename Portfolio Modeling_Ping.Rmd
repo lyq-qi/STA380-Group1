@@ -1,0 +1,237 @@
+---
+title: "R_HW_3_Portfolio Modeling"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+#install.packages('mosaic')
+#install.packages('quantmod')
+#install.packages('foreach')
+#install.packages("getSymbols")
+```
+
+## Portfolio (1) —— Aggressive Portfolio
+
+Currency ETFs (20%) + Corporate Bonds ETFs (30%) + Equities ETFs (50%)
+
+```{r}
+library(mosaic)
+library(quantmod)
+library(foreach)
+
+mystocks = c("UUP", "FXE", "VCIT", "LQD", "FXI", "EWJ")
+myprices = getSymbols(mystocks, from = "2010-01-01")
+
+# A chunk of code for adjusting all stocks
+# creates a new object adding 'a' to the end
+for(ticker in mystocks) {
+	expr = paste0(ticker, "a = adjustOHLC(", ticker, ")")
+	eval(parse(text=expr))
+}
+
+# Combine all the returns in a matrix
+all_returns = cbind(ClCl(UUPa),
+								ClCl(FXEa),
+								ClCl(VCITa),
+								ClCl(LQDa),
+								ClCl(FXIa),
+								ClCl(EWJa))
+head(all_returns)
+all_returns = as.matrix(na.omit(all_returns))
+
+library(foreach)
+# Now simulate many different possible futures
+# just repeating the above block thousands of times
+initial_wealth = 100000
+
+set.seed(1) #make sure we use same return every time running this model
+
+sim1 = foreach(i=1:5000, .combine='rbind') %do% {
+	total_wealth = initial_wealth
+	weights = c(0.1,0.1,0.15,0.15,0.25,0.25) #aggressive portfolio
+	holdings = weights * total_wealth
+	n_days = 20
+	wealthtracker = rep(0, n_days)
+	for(today in 1:n_days) {
+	  # Sample a random return from the empirical joint distribution
+    # This simulates a random day
+		return.today = resample(all_returns, 1, orig.ids=FALSE)
+		holdings = holdings + holdings*return.today
+		total_wealth = sum(holdings)
+		wealthtracker[today] = total_wealth
+		weights = c(0.1,0.1,0.15,0.15,0.25,0.25) #portfolios are rebalanced each day
+		holdings = weights * total_wealth #portfolios are rebalanced each day
+	}
+	wealthtracker
+}
+
+# each row is a simulated trajectory
+# each column is a data
+head(sim1)
+
+hist(sim1[,n_days], 25)
+
+# Profit/loss
+mean(sim1[,n_days])
+mean(sim1[,n_days] - initial_wealth)
+hist(sim1[,n_days]- initial_wealth, breaks=30)
+
+# 5% value at risk:
+quantile(sim1[,n_days]- initial_wealth, prob=0.05)
+
+# note: this is  a negative number (a loss, e.g. -500), but we conventionally
+# express VaR as a positive number (e.g. 500)
+
+quantile(sim1[,n_days]- initial_wealth, prob=0.95)
+```
+
+## Portfolio (2) —— Moderate Portfolio
+
+Currency ETFs (30%) + Corporate Bonds ETFs (50%) + Equities ETFs (20%)
+
+```{r}
+library(mosaic)
+library(quantmod)
+library(foreach)
+
+mystocks = c("UUP", "FXE", "VCIT", "LQD", "FXI", "EWJ")
+myprices = getSymbols(mystocks, from = "2010-01-01")
+
+# A chunk of code for adjusting all stocks
+# creates a new object adding 'a' to the end
+for(ticker in mystocks) {
+	expr = paste0(ticker, "a = adjustOHLC(", ticker, ")")
+	eval(parse(text=expr))
+}
+
+# Combine all the returns in a matrix
+all_returns = cbind(ClCl(UUPa),
+								ClCl(FXEa),
+								ClCl(VCITa),
+								ClCl(LQDa),
+								ClCl(FXIa),
+								ClCl(EWJa))
+head(all_returns)
+all_returns = as.matrix(na.omit(all_returns))
+
+library(foreach)
+# Now simulate many different possible futures
+# just repeating the above block thousands of times
+initial_wealth = 100000
+
+set.seed(1) #make sure we use same return every time running this model
+
+sim1 = foreach(i=1:5000, .combine='rbind') %do% {
+	total_wealth = initial_wealth
+	weights = c(0.15,0.15,0.25,0.25,0.1,0.1) #aggressive portfolio
+	holdings = weights * total_wealth
+	n_days = 20
+	wealthtracker = rep(0, n_days)
+	for(today in 1:n_days) {
+	  # Sample a random return from the empirical joint distribution
+    # This simulates a random day
+		return.today = resample(all_returns, 1, orig.ids=FALSE)
+		holdings = holdings + holdings*return.today
+		total_wealth = sum(holdings)
+		wealthtracker[today] = total_wealth
+		weights = c(0.15,0.15,0.25,0.25,0.1,0.1) #portfolios are rebalanced each day
+		holdings = weights * total_wealth #portfolios are rebalanced each day
+	}
+	wealthtracker
+}
+
+# each row is a simulated trajectory
+# each column is a data
+head(sim1)
+hist(sim1[,n_days], 25)
+
+# Profit/loss
+mean(sim1[,n_days])
+mean(sim1[,n_days] - initial_wealth)
+hist(sim1[,n_days]- initial_wealth, breaks=30)
+
+# 5% value at risk:
+quantile(sim1[,n_days]- initial_wealth, prob=0.05)
+
+# note: this is  a negative number (a loss, e.g. -500), but we conventionally
+# express VaR as a positive number (e.g. 500)
+
+quantile(sim1[,n_days]- initial_wealth, prob=0.95)
+```
+
+## Portfolio (3) —— Conservative Portfolio
+
+Currency ETFs (50%) + Corporate Bonds ETFs (30%) + Equities ETFs (20%)
+
+```{r}
+library(mosaic)
+library(quantmod)
+library(foreach)
+
+mystocks = c("UUP", "FXE", "VCIT", "LQD", "FXI", "EWJ")
+myprices = getSymbols(mystocks, from = "2010-01-01")
+
+# A chunk of code for adjusting all stocks
+# creates a new object adding 'a' to the end
+for(ticker in mystocks) {
+	expr = paste0(ticker, "a = adjustOHLC(", ticker, ")")
+	eval(parse(text=expr))
+}
+
+# Combine all the returns in a matrix
+all_returns = cbind(ClCl(UUPa),
+								ClCl(FXEa),
+								ClCl(VCITa),
+								ClCl(LQDa),
+								ClCl(FXIa),
+								ClCl(EWJa))
+head(all_returns)
+all_returns = as.matrix(na.omit(all_returns))
+
+library(foreach)
+# Now simulate many different possible futures
+# just repeating the above block thousands of times
+initial_wealth = 100000
+
+set.seed(1) #make sure we use same return every time running this model
+
+sim1 = foreach(i=1:5000, .combine='rbind') %do% {
+	total_wealth = initial_wealth
+	weights = c(0.25,0.25,0.15,0.15,0.1,0.1) #aggressive portfolio
+	holdings = weights * total_wealth
+	n_days = 20
+	wealthtracker = rep(0, n_days)
+	for(today in 1:n_days) {
+	  # Sample a random return from the empirical joint distribution
+    # This simulates a random day
+		return.today = resample(all_returns, 1, orig.ids=FALSE)
+		holdings = holdings + holdings*return.today
+		total_wealth = sum(holdings)
+		wealthtracker[today] = total_wealth
+		weights = c(0.25,0.25,0.15,0.15,0.1,0.1) #portfolios are rebalanced each day
+		holdings = weights * total_wealth #portfolios are rebalanced each day
+	}
+	wealthtracker
+}
+
+# each row is a simulated trajectory
+# each column is a data
+head(sim1)
+hist(sim1[,n_days], 25)
+
+# Profit/loss
+mean(sim1[,n_days])
+mean(sim1[,n_days] - initial_wealth)
+hist(sim1[,n_days]- initial_wealth, breaks=30)
+
+# 5% value at risk:
+quantile(sim1[,n_days]- initial_wealth, prob=0.05)
+
+# note: this is  a negative number (a loss, e.g. -500), but we conventionally
+# express VaR as a positive number (e.g. 500)
+
+quantile(sim1[,n_days]- initial_wealth, prob=0.95)
+```
+
