@@ -41,6 +41,7 @@ all_returns = cbind(ClCl(UUPa),
 head(all_returns)
 all_returns = as.matrix(na.omit(all_returns))
 
+
 library(foreach)
 # Now simulate many different possible futures
 # just repeating the above block thousands of times
@@ -86,6 +87,17 @@ quantile(sim1[,n_days]- initial_wealth, prob=0.05)
 
 # 95% value at risk:
 quantile(sim1[,n_days]- initial_wealth, prob=0.95)
+
+#Return per day graph over the total time
+day_profit = c()
+for (i in 1:n_days){
+  day_profit[i] = mean(sim1[,i])
+}
+num_days=1:n_days
+return_df=data.frame(day_profit,num_days)
+max(return_df)
+ggplot(data=return_df) + geom_line(mapping=aes(x=num_days,y=day_profit)) +
+  ggtitle("Aggressive Portfolio Returns ") + xlab("Days") + ylab("Return ($)")
 ```
 
 ## Portfolio (2) —— Moderate Portfolio
@@ -117,6 +129,7 @@ all_returns = cbind(ClCl(UUPa),
 head(all_returns)
 all_returns = as.matrix(na.omit(all_returns))
 
+
 library(foreach)
 # Now simulate many different possible futures
 # just repeating the above block thousands of times
@@ -126,7 +139,7 @@ set.seed(1) #make sure we use same return every time running this model
 
 sim2 = foreach(i=1:5000, .combine='rbind') %do% {
 	total_wealth = initial_wealth
-	weights = c(0.15,0.15,0.25,0.25,0.1,0.1) #aggressive portfolio
+	weights = c(0.15,0.15,0.25,0.25,0.1,0.1) #moderate portfolio
 	holdings = weights * total_wealth
 	n_days = 20
 	wealthtracker = rep(0, n_days)
@@ -160,7 +173,22 @@ quantile(sim2[,n_days]- initial_wealth, prob=0.05)
 # express VaR as a positive number (e.g. 500)
 
 # 95% value at risk:
+<<<<<<< Updated upstream
 quantile(sim2[,n_days]- initial_wealth, prob=0.95)
+=======
+quantile(sim1[,n_days]- initial_wealth, prob=0.95)
+
+#Return per day graph over the total time
+day_profit = c()
+for (i in 1:n_days){
+  day_profit[i] = mean(sim1[,i])
+}
+num_days=1:n_days
+return_df=data.frame(day_profit,num_days)
+max(return_df)
+ggplot(data=return_df) + geom_line(mapping=aes(x=num_days,y=day_profit)) +
+  ggtitle("Moderate Portfolio Returns ") + xlab("Days") + ylab("Return ($)")
+>>>>>>> Stashed changes
 ```
 
 ## Portfolio (3) —— Conservative Portfolio
@@ -192,6 +220,7 @@ all_returns = cbind(ClCl(UUPa),
 head(all_returns)
 all_returns = as.matrix(na.omit(all_returns))
 
+
 library(foreach)
 # Now simulate many different possible futures
 # just repeating the above block thousands of times
@@ -201,7 +230,7 @@ set.seed(1) #make sure we use same return every time running this model
 
 sim3 = foreach(i=1:5000, .combine='rbind') %do% {
 	total_wealth = initial_wealth
-	weights = c(0.25,0.25,0.15,0.15,0.1,0.1) #aggressive portfolio
+	weights = c(0.25,0.25,0.15,0.15,0.1,0.1) #conservative portfolio
 	holdings = weights * total_wealth
 	n_days = 20
 	wealthtracker = rep(0, n_days)
@@ -235,6 +264,21 @@ quantile(sim3[,n_days]- initial_wealth, prob=0.05)
 # express VaR as a positive number (e.g. 500)
 
 # 95% value at risk:
+<<<<<<< Updated upstream
 quantile(sim3[,n_days]- initial_wealth, prob=0.95)
+=======
+quantile(sim1[,n_days]- initial_wealth, prob=0.95)
+
+#Return per day graph over the total time
+day_profit = c()
+for (i in 1:n_days){
+  day_profit[i] = mean(sim1[,i])
+}
+num_days=1:n_days
+return_df=data.frame(day_profit,num_days)
+max(return_df)
+ggplot(data=return_df) + geom_line(mapping=aes(x=num_days,y=day_profit)) +
+  ggtitle("Safe Portfolio Returns ") + xlab("Days") + ylab("Return ($)")
+>>>>>>> Stashed changes
 ```
 
