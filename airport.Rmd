@@ -31,14 +31,14 @@ ggplot(data=airport)+geom_histogram(mapping=aes(x=ArrDelay),bins = 100,binwidth 
   annotate(x=mean(ArrDelay),y=+Inf,label="Average Delay",vjust=1,geom="label") 
 
 ggplot(data=airport)+geom_histogram(mapping=aes(x=DepDelay),bins = 100,binwidth = 15,color = 'slateblue', fill="skyblue1") + 
-  xlab("Arrival Delay") + ggtitle("Departure Delay Count") +xlim(-50,450) +ylim(0,80000) +ylab("Count") +
+  xlab("Departure Delay") + ggtitle("Departure Delay Count") +xlim(-50,450) +ylim(0,80000) +ylab("Count") +
   geom_vline(aes(xintercept  = mean(ArrDelay)), color = 'red', linetype = 'dashed', size = 1) + theme_economist() + 
   annotate(x=mean(DepDelay),y=+Inf,label="Average Delay",vjust=1,geom="label") 
 
 
 
-paste0("The average arrival delay is ",round(mean(ArrDelay),2)," minutes.")
-paste0("The average departure delay is ",round(mean(DepDelay),2)," minutes.")
+paste0("The average arrival delay is ",round(mean(airport$ArrDelay),2)," minutes.")
+paste0("The average departure delay is ",round(mean(airport$DepDelay),2)," minutes.")
 ```
 As we can see from the arrival histogram, most flights coming into Austin-Bergstrom are on time/early or delayed by less than 10 minutes. The flight departure histogram shows there are more delays in departures than arrivals. The departing flights have a delay that is around 2 minutes longer than that of an arriving flight. 
 
