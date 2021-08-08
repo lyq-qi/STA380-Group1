@@ -173,9 +173,9 @@ quantile(sim2[,n_days]- initial_wealth, prob=0.05)
 # express VaR as a positive number (e.g. 500)
 
 # 95% value at risk:
-<<<<<<< Updated upstream
+
 quantile(sim2[,n_days]- initial_wealth, prob=0.95)
-=======
+
 quantile(sim1[,n_days]- initial_wealth, prob=0.95)
 
 #Return per day graph over the total time
@@ -188,7 +188,7 @@ return_df=data.frame(day_profit,num_days)
 max(return_df)
 ggplot(data=return_df) + geom_line(mapping=aes(x=num_days,y=day_profit)) +
   ggtitle("Moderate Portfolio Returns ") + xlab("Days") + ylab("Return ($)")
->>>>>>> Stashed changes
+
 ```
 
 ## Portfolio (3) —— Conservative Portfolio
@@ -264,9 +264,9 @@ quantile(sim3[,n_days]- initial_wealth, prob=0.05)
 # express VaR as a positive number (e.g. 500)
 
 # 95% value at risk:
-<<<<<<< Updated upstream
+
 quantile(sim3[,n_days]- initial_wealth, prob=0.95)
-=======
+
 quantile(sim1[,n_days]- initial_wealth, prob=0.95)
 
 #Return per day graph over the total time
@@ -279,6 +279,6 @@ return_df=data.frame(day_profit,num_days)
 max(return_df)
 ggplot(data=return_df) + geom_line(mapping=aes(x=num_days,y=day_profit)) +
   ggtitle("Safe Portfolio Returns ") + xlab("Days") + ylab("Return ($)")
->>>>>>> Stashed changes
+
 ```
 
