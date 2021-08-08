@@ -84,6 +84,7 @@ quantile(sim1[,n_days]- initial_wealth, prob=0.05)
 # note: this is  a negative number (a loss, e.g. -500), but we conventionally
 # express VaR as a positive number (e.g. 500)
 
+# 95% value at risk:
 quantile(sim1[,n_days]- initial_wealth, prob=0.95)
 ```
 
@@ -158,6 +159,7 @@ quantile(sim1[,n_days]- initial_wealth, prob=0.05)
 # note: this is  a negative number (a loss, e.g. -500), but we conventionally
 # express VaR as a positive number (e.g. 500)
 
+# 95% value at risk:
 quantile(sim1[,n_days]- initial_wealth, prob=0.95)
 ```
 
@@ -232,6 +234,7 @@ quantile(sim1[,n_days]- initial_wealth, prob=0.05)
 # note: this is  a negative number (a loss, e.g. -500), but we conventionally
 # express VaR as a positive number (e.g. 500)
 
+# 95% value at risk:
 quantile(sim1[,n_days]- initial_wealth, prob=0.95)
 ```
 
