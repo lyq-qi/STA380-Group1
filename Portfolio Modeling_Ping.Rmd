@@ -176,12 +176,12 @@ quantile(sim2[,n_days]- initial_wealth, prob=0.05)
 
 quantile(sim2[,n_days]- initial_wealth, prob=0.95)
 
-quantile(sim1[,n_days]- initial_wealth, prob=0.95)
+quantile(sim2[,n_days]- initial_wealth, prob=0.95)
 
 #Return per day graph over the total time
 day_profit = c()
 for (i in 1:n_days){
-  day_profit[i] = mean(sim1[,i])
+  day_profit[i] = mean(sim2[,i])
 }
 num_days=1:n_days
 return_df=data.frame(day_profit,num_days)
@@ -267,12 +267,12 @@ quantile(sim3[,n_days]- initial_wealth, prob=0.05)
 
 quantile(sim3[,n_days]- initial_wealth, prob=0.95)
 
-quantile(sim1[,n_days]- initial_wealth, prob=0.95)
+quantile(sim3[,n_days]- initial_wealth, prob=0.95)
 
 #Return per day graph over the total time
 day_profit = c()
 for (i in 1:n_days){
-  day_profit[i] = mean(sim1[,i])
+  day_profit[i] = mean(sim3[,i])
 }
 num_days=1:n_days
 return_df=data.frame(day_profit,num_days)
