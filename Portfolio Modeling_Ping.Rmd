@@ -267,8 +267,6 @@ quantile(sim3[,n_days]- initial_wealth, prob=0.05)
 
 quantile(sim3[,n_days]- initial_wealth, prob=0.95)
 
-quantile(sim3[,n_days]- initial_wealth, prob=0.95)
-
 #Return per day graph over the total time
 day_profit = c()
 for (i in 1:n_days){
@@ -282,3 +280,4 @@ ggplot(data=return_df) + geom_line(mapping=aes(x=num_days,y=day_profit)) +
 
 ```
 
+Across the three portfolios, we can see that the return on average increases over the 20 days period. However, the aggressive model return vs days line graph fluctuate a little bit more then the other two portfolios. This can be seen on the VaR as well, while the aggressive portfolio has the highest average return, it also has the highest VaR at 5%. Comparing the returns and VaR of all three models, the moderate portfolio is the best option for us because it has a relatively high return that not too far from that of the agreesive model(100296.8 vs 100325.4) and a 5% VaR that is far lower then the of the aggressive model(2060.641 vs 4354.693). The conservative model on the other hand have the lowerst VaR (1870.43) but the return (100203.6) is also the lowest therefore we don't think it is the best option comparing to the moderate model. 
