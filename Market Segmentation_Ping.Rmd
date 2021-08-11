@@ -126,7 +126,7 @@ tweets_new$cluster1 <- tweets_cluster1$cluster
 tweets_new
 ```
 
-## The biggest cluster is cluster #3, which account for 51% out of 6 six clusters.
+## The biggest cluster is cluster #1, which account for 52% out of 6 six clusters.
 
 ```{r}
 round(prop.table(table(tweets_new$cluster1)),2)
