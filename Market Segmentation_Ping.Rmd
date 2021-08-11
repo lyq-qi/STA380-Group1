@@ -36,7 +36,7 @@ summary(pr_out)
 ```
 
 ```{r}
-# The first principal component accounts for 12.47% of the data variance.
+# The first principal component accounts for 13.14% of the data variance.
 # This is the highest proportion
 pr_var <-  pr_out$sdev ^ 2
 pve <- pr_var / sum(pr_var)
@@ -136,14 +136,14 @@ tweets_new %>%
   summarise(count=n())
 ```
 ## Clusters Profiling
-The characteristic summary of NutrientH20's Twitter followers in the same cluster are as follows:
+The characteristic summary of NutrientH20's Twitter followers in the same cluster are as follows (without chatter):
 
-Cluster 1: Highest politics, travel, news, chatter, computers, photo_sharing, automotive
-Cluster 2: Highest sports_fandom, religion,food, parenting, chatter, school
-Cluster 3: Highest cooking, photo_sharing, fashion, chatter, beauty, health_nutrition
-Cluster 4: Highest chatter, photo_sharing, current_events, health_nutrition, travel 
-Cluster 5: Highest health_nutrition, personal_fitness,chatter, cooking, outdoors
-Cluster 6: Highest chatter, photo_sharing, college_uni, health_nutrition, online_gaming, tv_film
+Cluster 1: Highest photo_sharing,current_events, shopping, health_nutrition, travel 
+Cluster 2: Highest sports_fandom, religion, food, parenting, current_events, school
+Cluster 3: Highest politics, travel, news, photo_sharing, computers, automotive, sports_fandom
+Cluster 4: Highest health_nutrition, personal_fitness, outdoors, food
+Cluster 5: Highest cooking, photo_sharing, fashion, beauty health_nutrition, shopping 
+Cluster 6: Highest college_uni, photo_sharing, sports_playing, tv_film, travel, current_events, cooking
 
 ```{r}
 library(dplyr)
@@ -192,6 +192,18 @@ tweets_new %>%
   summarise(count=n())
 ```
 ## Clusters Profiling
+The characteristic summary of NutrientH20's Twitter followers in the same cluster are as follows (without chatter):
+
+Cluster 1: Highest cooking, photo_sharing, fashion, beauty
+Cluster 2: Highest sports_fandom, religion,food, parenting
+Cluster 3: Highest politics, travel, news
+Cluster 4: Highest health_nutrition, personal_nutrition, cooking
+Cluster 5: Highest photo_sharing, shopping
+Cluster 6: Highest tv_film, art
+Cluster 7: Highest sports_fandom, religion, food, parenting 
+Cluster 8: Highest health_nutrition, photo_sharing, current_events, travel
+Cluster 9: Highest dating, photo_sharing, school
+Cluster 10: Highest college_uni, online_gaming
 
 ```{r}
 library(dplyr)
