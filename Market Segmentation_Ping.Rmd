@@ -1,0 +1,204 @@
+---
+title: "R_HW_4_Market Segmentation"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+tweets <- read.csv("social_marketing.csv")
+tweets <- tweets[,-1]
+```
+
+## First, let's take a look at data correlation.
+Practically, if our data is not highly correlated, we might not need a PCA.
+As the graph shows, some of our variables are quite correlated.Thus, we can proceed to PCA and create a smaller subset of variables.
+
+```{r}
+# Creating a correlation plot
+library(ggcorrplot)
+cormat <- round(cor(tweets), 2)
+ggcorrplot::ggcorrplot(cor(cormat), hc.order = TRUE)
+```
+
+
+```{r}
+# PCA
+pr_out <-prcomp(tweets, center = TRUE, scale = TRUE) #Scaling data
+summary(pr_out)
+```
+
+```{r}
+# The first principal component accounts for 12.47% of the data variance.
+# This is the highest proportion
+pr_var <-  pr_out$sdev ^ 2
+pve <- pr_var / sum(pr_var)
+plot(pve, xlab = "Principal Component", ylab = "Proportion of Variance Explained", ylim = c(0,1), type = 'b')
+```
+
+
+```{r}
+# Cumulative PVE plot
+plot(cumsum(pve), xlab = "Principal Component", ylab = "Cumulative Proportion of Variance Explained", ylim =c(0,1), type = 'b')
+```
+
+
+```{r}
+varimax(pr_out$rotation[, 1:10])
+```
+
+```{r}
+library(tidyverse)
+library(FactoMineR)
+library(factoextra)
+
+tweets_scale <- scale(tweets)
+pca_tweets <- PCA(tweets_scale, 
+                scale.unit = FALSE,
+                graph = F, 
+                ncp = 10) #default: 5)
+summary(pca_tweets)
+```
+
+```{r}
+plot.PCA(pca_tweets, 
+         choix = c("ind"),
+         habillage = 1,
+         select = "contrib5",
+         invisible = "quali")
+```
+
+```{r}
+plot.PCA(pca_tweets, choix = c("var"))
+```
+
+```{r}
+pca_dimdesc <- dimdesc(pca_tweets)
+pca_dimdesc$Dim.1
+```
+
+```{r}
+tweets_new <- tweets[-c(2260,2389,3227,3998,7059),] #get rid of outliers
+tweets_scale1 <- scale(tweets_new)
+```
+
+```{r}
+RNGkind(sample.kind = "Rounding") #to get the set.seed numbers not changed everytime executed
+kmeansTunning <- function(data, maxK) {
+  withinall <- NULL
+  total_k <- NULL
+  for (i in 1:maxK) {
+    set.seed(101)
+    temp <- kmeans(data,i)$tot.withinss
+    withinall <- append(withinall, temp)
+    total_k <- append(total_k,i)
+  }
+  plot(x = total_k, y = withinall, type = "o", xlab = "Number of Cluster", ylab = "Total within")
+}
+
+# kmeansTunning(your_data, maxK = 5)
+kmeansTunning(tweets_scale1, maxK = 20)
+```
+
+## From above figure, we can choose 6 or 10 clusters.
+
+## Let's see if we set centers equal to 6.
+
+```{r}
+RNGkind(sample.kind = "Rounding") 
+#to get the set.seed numbers not changed everytime executed
+
+set.seed(101)
+tweets_cluster1 <- kmeans(tweets_scale1, centers = 6)
+
+fviz_cluster(tweets_cluster1, data = tweets_scale1)
+```
+
+```{r}
+tweets_new$cluster1 <- tweets_cluster1$cluster
+tweets_new
+```
+
+## The biggest cluster is cluster #3, which account for 51% out of 6 six clusters.
+
+```{r}
+round(prop.table(table(tweets_new$cluster1)),2)
+library(dplyr)
+tweets_new %>% 
+  group_by(cluster1) %>% 
+  summarise(count=n())
+```
+## Clusters Profiling
+The characteristic summary of NutrientH20's Twitter followers in the same cluster are as follows:
+
+Cluster 1: Highest sports_fandom, food, family, crafts, religion, parenting, school
+Cluster 2: Highest travel, politics, news, computers, automotive
+Cluster 3: Nothing special?
+Cluster 4: Highest online_gaming, college_uni, sports_playing, art, spam
+Cluster 5: Highest health_nutrition, eco, outdoors, personal_fitness
+Cluster 6: Highest chatter, current_events, photo_sharing, uncategorized, tv_film, home_and_garden, music, shopping, cooking, business, beauty, dating, fashion, small_business, adult
+
+```{r}
+library(dplyr)
+prof1=tweets_new %>% 
+      group_by(cluster1) %>% 
+      summarise_all('mean')
+prof1
+t(data.frame(prof1,row.names=1))
+```
+
+```{r}
+library(dplyr)
+a=data.frame(tweets_scale1)
+a$cluster1 <- tweets_cluster1$cluster
+prof3=a %>% 
+      group_by(cluster1) %>% 
+      summarise_all('mean')
+prof3
+t(data.frame(prof3,row.names=1))
+```
+
+
+## Let's see if we set centers equal to 10.
+
+```{r}
+RNGkind(sample.kind = "Rounding") 
+#to get the set.seed numbers not changed everytime executed
+
+set.seed(101)
+tweets_cluster2 <- kmeans(tweets_scale1, centers = 10)
+
+fviz_cluster(tweets_cluster2, data = tweets_scale1)
+```
+
+```{r}
+tweets_new$cluster2 <- tweets_cluster2$cluster
+tweets_new
+```
+## The biggest cluster is cluster #9, which account for 43% out of 10 six clusters.
+
+```{r}
+round(prop.table(table(tweets_new$cluster2)),2)
+library(dplyr)
+tweets_new %>% 
+  group_by(cluster2) %>% 
+  summarise(count=n())
+```
+## Clusters Profiling
+
+```{r}
+library(dplyr)
+prof2=tweets_new %>% 
+      group_by(cluster2) %>% 
+      summarise_all('mean')
+prof2
+t(data.frame(prof2,row.names=1))
+```
+
+```{r}
+
+```
+
+
