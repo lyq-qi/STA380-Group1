@@ -143,7 +143,7 @@ Cluster 2: Highest sports_fandom, religion, food, parenting, current_events, sch
 Cluster 3: Highest politics, travel, news, photo_sharing, computers, automotive, sports_fandom
 Cluster 4: Highest health_nutrition, personal_fitness, outdoors, food
 Cluster 5: Highest cooking, photo_sharing, fashion, beauty health_nutrition, shopping 
-Cluster 6: Highest college_uni, photo_sharing, sports_playing, tv_film, travel, current_events, cooking
+Cluster 6: Highest college_uni, online_gaming
 
 ```{r}
 library(dplyr)
@@ -182,7 +182,7 @@ fviz_cluster(tweets_cluster2, data = tweets_scale1)
 tweets_new$cluster2 <- tweets_cluster2$cluster
 tweets_new
 ```
-## The biggest cluster is cluster #9, which account for 43% out of 10 six clusters.
+## The biggest cluster is cluster #8, which account for 40% out of 10 six clusters.
 
 ```{r}
 round(prop.table(table(tweets_new$cluster2)),2)
