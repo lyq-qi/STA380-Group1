@@ -12,7 +12,7 @@ library(dplyr)
 tweets <- read.csv("social_marketing.csv")
 tweets <- tweets[,-1]
 #filter out the rows with spam and adult because they can be bots
-tweets <- tweets %>% filter(spam != 1 & adult != 1) 
+tweets <- tweets %>% filter(spam == 0 & adult == 0) 
 #Drop spam and adult columns since they are all 0
 tweets <- tweets[,-35:-36] 
 ```
@@ -138,12 +138,12 @@ tweets_new %>%
 ## Clusters Profiling
 The characteristic summary of NutrientH20's Twitter followers in the same cluster are as follows:
 
-Cluster 1: Highest sports_fandom, food, family, crafts, religion, parenting, school
-Cluster 2: Highest travel, politics, news, computers, automotive
-Cluster 3: Nothing special?
-Cluster 4: Highest online_gaming, college_uni, sports_playing, art, spam
-Cluster 5: Highest health_nutrition, eco, outdoors, personal_fitness
-Cluster 6: Highest chatter, current_events, photo_sharing, uncategorized, tv_film, home_and_garden, music, shopping, cooking, business, beauty, dating, fashion, small_business, adult
+Cluster 1: Highest politics, travel, news, chatter, computers, photo_sharing, automotive
+Cluster 2: Highest sports_fandom, religion,food, parenting, chatter, school
+Cluster 3: Highest cooking, photo_sharing, fashion, chatter, beauty, health_nutrition
+Cluster 4: Highest chatter, photo_sharing, current_events, health_nutrition, travel 
+Cluster 5: Highest health_nutrition, personal_fitness,chatter, cooking, outdoors
+Cluster 6: Highest chatter, photo_sharing, college_uni, health_nutrition, online_gaming, tv_film
 
 ```{r}
 library(dplyr)
