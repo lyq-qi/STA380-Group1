@@ -88,25 +88,6 @@ all_class + coord_cartesian(ylim=c(0,100))
 
 ```
 
-#might delete 
-```{r,includes = False}
-med_age_green = median(gb[gb$green_rating == 1,]$age)
-new_building = gb %>% filter(age < med_age_green)
-old_building =gb %>% filter(age >= med_age_green)
-
-#based on these plots, we saw that a new green building has a slightly lower rent then non-green buildings, but as age increase green buildings rent became higher then the non-green building
-new = ggplot(data=new_building,aes(x=green_rating, y=Rent)) + geom_boxplot()  
-old = ggplot(data=old_building,aes(x=green_rating, y=Rent)) + geom_boxplot() 
-
-new
-old
-
-#taking a closer look at the specific value, rent for green increases until around the median age of 22 then it decreases slightly but still higher then when its new
-new_rent_ng = median(new_building[new_building$green_rating == 0,]$Rent)#28.8
-old_rent_ng = median(old_building[old_building$green_rating == 0,]$Rent)#24.27
-new_rent_g = median(new_building[new_building$green_rating == 1,]$Rent)#28.2
-old_rent_g = median(old_building[old_building$green_rating == 1,]$Rent)#27
-```
 Profit calculations with class_a eqauls to 1.
 ```{r}
 #Create database that has only green buildings and one that has no green buildings
