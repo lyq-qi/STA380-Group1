@@ -8,8 +8,10 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
+library(dplyr)
 tweets <- read.csv("social_marketing.csv")
 tweets <- tweets[,-1]
+tweets <- tweets %>% filter(spam != 1 & adult != 1)
 ```
 
 ## First, let's take a look at data correlation.
