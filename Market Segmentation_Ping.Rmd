@@ -85,7 +85,7 @@ pca_dimdesc$Dim.1
 ```
 
 ```{r}
-tweets_new <- tweets[-c(2260,2389,3227,3998,7059),] #get rid of outliers
+tweets_new <- tweets[-c(6551,2089,2984,3705,2204),] #get rid of outliers
 tweets_scale1 <- scale(tweets_new)
 ```
 
