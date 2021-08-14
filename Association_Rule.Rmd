@@ -18,12 +18,6 @@ df = data.frame(user=character(),
                  items=character(), 
                  stringsAsFactors=FALSE) 
 
-test = raw[1,]
-test1 = unlist(strsplit(test, ","))
-user.id = rep(1, length(test1))
-df = rbind(df, data.frame(user = user.id,items = test1))
-
-
 for (i in 1:nrow(raw)){
   string = raw[i,]
   basket = unlist(strsplit(string, ","))
@@ -64,11 +58,16 @@ groceries = lapply(groceries, unique)
 grotrans = as(groceries, "transactions")
 summary(grotrans)
 
-grocrules = apriori(groceries,parameter=list(support=.005, confidence=.1, maxlen=5))
+grocrules = apriori(groceries,parameter=list(support=.01, confidence=.1, maxlen=5))
 inspect(grocrules)
 
-inspect(subset(grocrules, subset=lift > 5))
-inspect(subset(grocrules, subset=confidence > 0.6))
-inspect(subset(grocrules, subset=lift > 10 & confidence > 0.5))
+inspect(subset(grocrules, subset=lift > 3))
+inspect(subset(grocrules, subset=confidence > 0.5))
+inspect(subset(grocrules, subset=lift > 3 & confidence > 0.5))
+```
+
+#visualization for the rules
+```{r}
+plot(grocrules)
 ```
 
