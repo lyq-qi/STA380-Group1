@@ -66,5 +66,9 @@ summary(grotrans)
 
 grocrules = apriori(groceries,parameter=list(support=.005, confidence=.1, maxlen=5))
 inspect(grocrules)
+
+inspect(subset(grocrules, subset=lift > 5))
+inspect(subset(grocrules, subset=confidence > 0.6))
+inspect(subset(grocrules, subset=lift > 10 & confidence > 0.5))
 ```
 
