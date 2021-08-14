@@ -1,0 +1,70 @@
+---
+title: "Association_Rule_Mining"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(arules)
+library(arulesViz)
+library(ggplot2)
+```
+
+#some data processing
+```{r, include=False}
+raw = read.delim("groceries.txt",header= FALSE)
+df = data.frame(user=character(), 
+                 items=character(), 
+                 stringsAsFactors=FALSE) 
+
+test = raw[1,]
+test1 = unlist(strsplit(test, ","))
+user.id = rep(1, length(test1))
+df = rbind(df, data.frame(user = user.id,items = test1))
+
+
+for (i in 1:nrow(raw)){
+  string = raw[i,]
+  basket = unlist(strsplit(string, ","))
+  user.id = rep(i, length(basket))
+  df = rbind(df, data.frame(user = user.id,items = basket))
+}
+```
+
+#looking at the cleaned data
+```{r}
+str(df)
+summary(df)
+
+#ordering the plots
+items_count = aggregate(df$items,by = list(df$items),FUN =length)
+colnames(items_count) <- c("item", "total") 
+items_count = items_count[order(items_count$total,decreasing = TRUE),]  #sort
+items_count$item <- factor(items_count$item, levels = items_count$item)  # to retain the order in plot.
+head(items_count, 4)
+
+theme_set(theme_bw())
+
+# Draw plot
+ggplot(items_count[1:20,], aes(x=item, y=total)) + 
+  geom_bar(stat="identity", width=.5, fill="tomato") + 
+  labs(title="Top 10 Popular Groceries") + 
+  theme(axis.text.x = element_text(angle=90,vjust = 0))
+
+```
+
+
+#Start the association rule process
+```{r}
+df$user = factor(df$user)
+groceries = split(x=df$items, f=df$user)
+groceries = lapply(groceries, unique)
+
+grotrans = as(groceries, "transactions")
+summary(grotrans)
+
+grocrules = apriori(groceries,parameter=list(support=.005, confidence=.1, maxlen=5))
+inspect(grocrules)
+```
+
