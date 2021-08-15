@@ -146,6 +146,7 @@ Cluster 5: Highest cooking, photo_sharing, fashion, beauty health_nutrition, sho
 Cluster 6: Highest college_uni, online_gaming
 
 ```{r}
+#the numbers are calculating the mean frequency of posts related to this certain interest/topic
 library(dplyr)
 prof1=tweets_new %>% 
       group_by(cluster1) %>% 
