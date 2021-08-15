@@ -128,3 +128,82 @@ plot(sub1, method='graph')
 plot(head(sub1,50,by='lift'), method='graph')
 ```
 
+```{r}
+library(tidyverse)
+library(arules)
+library(arulesViz)
+library(ggplot2)
+
+raw = read.delim("groceries.txt",header= FALSE)
+df = data.frame(user=character(), 
+                items=character(), 
+                stringsAsFactors=FALSE) 
+
+for (i in 1:nrow(raw)){
+  string = raw[i,]
+  basket = unlist(strsplit(string, ","))
+  user.id = rep(i, length(basket))
+  df = rbind(df, data.frame(user = user.id,items = basket))
+}
+
+str(df)
+summary(df)
+
+#ordering the plots
+items_count = aggregate(df$items,by = list(df$items),FUN =length)
+colnames(items_count) <- c("item", "total") 
+items_count = items_count[order(items_count$total,decreasing = TRUE),]  #sort
+items_count$item <- factor(items_count$item, levels = items_count$item)  # to retain the order in plot.
+head(items_count, 4)
+
+theme_set(theme_bw())
+```
+
+```{r}
+# Draw plot
+ggplot(items_count[1:20,], aes(x=item, y=total)) + 
+  geom_bar(stat="identity", width=.5, fill="tomato") + 
+  labs(title="Top 10 Popular Groceries") + 
+  theme(axis.text.x = element_text(angle=90,vjust = 0))
+```
+
+```{r}
+df$user = factor(df$user)
+groceries = split(x=df$items, f=df$user)
+groceries = lapply(groceries, unique)
+
+grotrans = as(groceries, "transactions")
+summary(grotrans)
+```
+
+```{r}
+groc_rule_1 = apriori(groceries,parameter=list(support=.05, confidence=.1, minlen=2))
+inspect(groc_rule_1)
+#6 rules bc high support and confidence
+inspect(subset(groc_rule_1, subset=lift > 3))
+inspect(subset(groc_rule_1, subset=confidence > 0.5))
+inspect(subset(groc_rule_1, subset=lift > 3 & confidence > 0.5))
+plot(groc_rule_1,method="graph")
+```
+
+```{r}
+groc_rule_2 = apriori(groceries,parameter=list(support=.03, confidence=.05, minlen=2))
+inspect(groc_rule_2)
+#38 rules
+inspect(subset(groc_rule_2, subset=lift > 3))
+inspect(subset(groc_rule_2, subset=confidence > 0.5))
+inspect(subset(groc_rule_2, subset=lift > 3 & confidence > 0.5))
+plot(groc_rule_2,method="graph")
+```
+
+```{r}
+groc_rule_3 = apriori(groceries,parameter=list(support=.01, confidence=.01, minlen=2))
+inspect(groc_rule_3)
+#125 rules
+inspect(subset(groc_rule_3, subset=lift > 3))
+inspect(subset(groc_rule_3, subset=confidence > 0.5))
+inspect(subset(groc_rule_3, subset=lift > 3 & confidence > 0.5))
+plot(groc_rule_3,method="graph")
+```
+
+From these, we can see that whole milk is the most important item, and that makes sense as that is a staple in most diets. Next would be yogurt and other vegetables, which also makes sense as they are staple items. Some other things that we see, are that meat is correlated with vegetables, so putting some coupons or such for meat in the veggie section could help sell meat. Can put some berries next to yogurt to encourage people to buy berries and make a nice parfait.
