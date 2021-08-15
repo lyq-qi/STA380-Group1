@@ -1,0 +1,130 @@
+---
+title: "R_HW_6_Association Rule Mining"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+#install.packages('tidyverse')
+#install.packages('arules')  
+#install.packages('arulesViz')
+```
+
+```{r}
+library(tidyverse)
+library(arules)  # has a big ecosystem of packages built around it
+library(arulesViz)
+```
+
+#some data processing
+```{r, include=False}
+raw = read.delim("groceries.txt",header= FALSE)
+df = data.frame(user=character(), 
+                 items=character(), 
+                 stringsAsFactors=FALSE) 
+
+for (i in 1:nrow(raw)){
+  string = raw[i,]
+  basket = unlist(strsplit(string, ","))
+  user.id = rep(i, length(basket))
+  df = rbind(df, data.frame(user = user.id,items = basket))
+}
+
+# Turn user into a factor
+df$user = factor(df$user)
+
+# apriori algorithm expects a list of baskets in a special format
+# In this case, one "basket" of songs per user
+# First split data into a list of artists for each user
+grocery = split(x=df$items, f=df$user)
+
+## Remove duplicates ("de-dupe")
+grocery = lapply(grocery, unique)
+```
+
+# Most frequent items include:
+whole milk, other vegetables, rolls/bun, soda, yogurt
+
+```{r}
+itemtrans = as(grocery, "transactions")
+summary(itemtrans)
+```
+
+# Most frequent items include:
+whole milk, other vegetables, rolls/bun, soda, yogurt
+```{r}
+#calculates support for frequent items
+frequentItems <- eclat (itemtrans, parameter=list(supp=0.06, maxlen=10)) 
+inspect(frequentItems)
+#plot frequent items
+itemFrequencyPlot(itemtrans, topN=10, type="absolute", main="Item Frequency") 
+```
+
+```{r}
+# Now run the 'apriori' algorithm
+# Look at rules with support > .005 & confidence >.1 & length (# items) <= 5
+itemrules = apriori(itemtrans,parameter=list(support=.005, confidence=.1, maxlen=5))
+inspect(itemrules)
+```
+
+# high lift rules tend to have low support
+
+```{r}
+# plot all the rules in (support, confidence) space
+plot(itemrules)
+```
+
+```{r}
+# plot all the rules in (support, lift) space
+plot(itemrules, measure = c("support", "lift"), shading = "confidence")
+```
+
+```{r}
+# "two key" plot: coloring is by size (order) of item set
+plot(itemrules, method='two-key plot')
+```
+
+# Sorted by 'high-confidence'
+top 10 are highly concentrated on whole milk.
+
+```{r}
+rules_conf <- sort(itemrules, by="confidence", decreasing=TRUE) # 'high-confidence' rules.
+inspect(rules_conf[1:10])
+```
+```{r}
+inspect(subset(rules_conf, confidence>0.6)) # show the support, lift and confidence for all rules
+```
+# Sorted by 'high-lift'
+top 10 are evenly distributed.
+
+```{r}
+rules_conf <- sort(itemrules, by="lift", decreasing=TRUE) # 'high-confidence' rules.
+inspect(rules_conf[1:10])
+```
+
+# To find what factors influenced purchase of whole milk
+
+```{r}
+itemrules2 <- apriori(data=itemtrans, parameter=list(supp=0.005,conf=0.1), appearance=list (default="lhs",rhs="whole milk"), control = list (verbose=F)) # get rules that lead to buying 'whole milk'
+rules_conf2 <- sort(itemrules2, by="confidence", decreasing=TRUE) # 'high-confidence' rules.
+inspect(head(rules_conf2))
+```
+
+# To find out what products were purchased after/along with whole milk
+
+```{r}
+itemrules3 <- apriori (data=itemtrans, parameter=list(supp=0.005,conf=0.1,minlen=2), appearance= list(default="rhs",lhs="whole milk"), control = list (verbose=F)) # those who bought 'milk' also bought..
+rules_conf3 <- sort(itemrules3, by="confidence", decreasing=TRUE) # 'high-confidence' rules.
+inspect(head(rules_conf3))
+```
+
+```{r}
+# graph-based visualization
+sub1 = subset(itemrules, subset=confidence>0.5 & support>0.005)
+summary(sub1)
+plot(sub1, method='graph')
+
+plot(head(sub1,50,by='lift'), method='graph')
+```
+
