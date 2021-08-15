@@ -7,6 +7,7 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+
 ```{r}
 library(dplyr)
 tweets <- read.csv("social_marketing.csv")
@@ -28,9 +29,8 @@ cormat <- round(cor(tweets), 2)
 ggcorrplot::ggcorrplot(cor(cormat), hc.order = TRUE)
 ```
 
-
+#PCA
 ```{r}
-# PCA
 pr_out <-prcomp(tweets, center = TRUE, scale = TRUE) #Scaling data
 summary(pr_out)
 ```
@@ -51,8 +51,11 @@ plot(cumsum(pve), xlab = "Principal Component", ylab = "Cumulative Proportion of
 
 
 ```{r}
-varimax(pr_out$rotation[, 1:10])
+varimax(pr_out$rotation[, 1:6])
 ```
+From the above PC summary, we can see that some PC have attributes that could fit in to the description of a specific segment such as PC1 which corresponds to an mid-aged population who have kids and are more traditional, and PC4 which corresponds to a population that is more health focused. With these information, we can compare and contrast with our clustering models later. 
+
+
 
 ```{r}
 library(tidyverse)
@@ -85,10 +88,12 @@ pca_dimdesc$Dim.1
 ```
 
 ```{r}
-tweets_new <- tweets[-c(6551,2089,2984,3705,2204),] #get rid of outliers
+#this part is to clean our data based on the pca outliers graph
+tweets_new <- tweets[-c(6551,2089,2984,3705,2204),] #get rid of outliers based on pca
 tweets_scale1 <- scale(tweets_new)
 ```
 
+#Identifying number of clusters we should generate 
 ```{r}
 RNGkind(sample.kind = "Rounding") #to get the set.seed numbers not changed everytime executed
 kmeansTunning <- function(data, maxK) {
@@ -109,7 +114,7 @@ kmeansTunning(tweets_scale1, maxK = 20)
 
 ## From above figure, we can choose 6 or 10 clusters.
 
-## Let's see if we set centers equal to 6.
+## 6 Clusters
 
 ```{r}
 RNGkind(sample.kind = "Rounding") 
@@ -136,38 +141,61 @@ tweets_new %>%
   summarise(count=n())
 ```
 ## Clusters Profiling
-The characteristic summary of NutrientH20's Twitter followers in the same cluster are as follows (without chatter):
 
-Cluster 1: Highest photo_sharing,current_events, shopping, health_nutrition, travel 
-Cluster 2: Highest sports_fandom, religion, food, parenting, current_events, school
-Cluster 3: Highest politics, travel, news, photo_sharing, computers, automotive, sports_fandom
-Cluster 4: Highest health_nutrition, personal_fitness, outdoors, food
-Cluster 5: Highest cooking, photo_sharing, fashion, beauty health_nutrition, shopping 
-Cluster 6: Highest college_uni, online_gaming
+#Non-scaled clusters
+The characteristic summary of NutrientH20's Twitter followers in the same cluster are as follows (not scaled):
+
+Cluster 1: Highest photo_sharing
+Cluster 2: Highest photo_sharing, sports_fandom, food, religion, parenting
+Cluster 3: Highest travel, politics, news, photo_sharing, computers
+Cluster 4: Highest health_nutrition(10 points higher than 5), personal_fitness, cooking, outdoors, photo_sharing
+Cluster 5: Highest photo_sharing(highest among clusters), cooking (7 points higher than cluster 4),beauty, fashion,health_nutrition
+Cluster 6: Highest college_uni, online_gaming, photo_sharing,sports_playing
 
 ```{r}
 #the numbers are calculating the mean frequency of posts related to this certain interest/topic
+#For these clusters, we picked 2 as our threshold to evaluate the mean under each cluster, anything above 2 will be included as a trait of that cluster (minus chatter)
+#the threshold is picked based on the mean value of the freq values across all the clusters.(Around 1.6 so we rounded up to 2)
+#We also want to limit the traits to top 5 so we don't over analyze a cluster
 library(dplyr)
 prof1=tweets_new %>% 
       group_by(cluster1) %>% 
       summarise_all('mean')
 prof1
+mean(as.matrix(prof1))
 t(data.frame(prof1,row.names=1))
 ```
+The above cluster is not scaled so we can find a lot of repetition of attributes between clusters, specifically photo_sharing which is present in all clusters most likely because photo_sharing is one of the most common attributes for tweets. Although still descriptive, some details might be left out. Next we will take a look at scaled clusters.
+
+
+
+#Scaled clusters
+The characteristic summary of NutrientH20's Twitter followers in the same cluster are as follows (scaled):
+
+Cluster 1: Highest food, personal_fitness, out_doors, cooking, health_nutrition
+Cluster 2: Highest sports_fandom, food, school, religion, parenting
+Cluster 3: Highest travel, politics, news, automotive, computers
+Cluster 4: Highest health_nutrition(higher than 1), personal_fitness(higher than 1), outdoors(higher than 1), eco, food(higher than 1 lower than 2)
+Cluster 5: Highest photo_sharing, cooking (higher than cluster 1), beauty, fashion, music
+Cluster 6: Highest college_uni, online_gaming, art,sports_playing,tv_film
 
 ```{r}
+#For these clusters, we picked 0.3 (absolute value) as our threshold to evaluate the mean under each cluster, anything above 0.3 will be included as a trait of that cluster (minus chatter)
+#the threshold is picked based on the mean value of the values across all the clusters.(Around 0.28 so we rounded up to 0.3)
+#We also want to limit the traits to top 5 so we don't over analyze a cluster
 library(dplyr)
 a=data.frame(tweets_scale1)
 a$cluster1 <- tweets_cluster1$cluster
 prof3=a %>% 
       group_by(cluster1) %>% 
       summarise_all('mean')
-prof3
+mean(as.matrix(prof3))
 t(data.frame(prof3,row.names=1))
 ```
+With the above two clusters formed based on scaled and non-scaled data, we found that the scaled clusters gives less overlaps of attributes between clusters and generally more informative attributes than the non-scaled one.
 
 
-## Let's see if we set centers equal to 10.
+## 10 Clusters
 
 ```{r}
 RNGkind(sample.kind = "Rounding") 
@@ -192,6 +220,7 @@ tweets_new %>%
   group_by(cluster2) %>% 
   summarise(count=n())
 ```
+
 ## Clusters Profiling
 The characteristic summary of NutrientH20's Twitter followers in the same cluster are as follows (without chatter):
 
@@ -214,9 +243,6 @@ prof2=tweets_new %>%
 prof2
 t(data.frame(prof2,row.names=1))
 ```
+Here we repeat the same process as we did for 6 clusters using non-scaled data and we can see that each cluster became more specific and smaller. This made it more difficult to identify what segment of the market the clusters could be refering to thus we pick 6 clusters as our optimal cluster. 
 
-```{r}
-
-```
-
-
+Based on the 6 clusters(scaled), we found that cluster one correspond to a more generalized segment of twitter followers with attributes that you would expect from someone who follows the company and you don't see any outstanding attributes, all of their numbers are close to the mean with nothing above 0.5. From cluster 2, we can see that parenting and religion is the top 2 attributes (above 2) listed along with other attributes that are also significant (above 1), this corresponds to the segment of twitter followers who are mid-aged, have kids, and have a more traditional life style. Cluster 3's top attributes are political, news, travel, automotives, and computers, where political and news takes the lead among these attributes. This segment of followers are likely those who are interested in political topics and what is going on in the world, also might be more interested in the cars and the IT realm. All of these attributes align with upper middle class males who has a more luxurious life style and invest in their hobbies. In cluster 4, we identify attributes such as health_nutrition, personal_fitness, outdoors which appears in cluster 1 but have a higher frequency than cluster 1. Eco was also a significant attribute in this cluster. From these attributes, we can see that this segment of followers are those who are more active in their daily life, more aware of the environment, and lead a healthy lifestyle. From cluster 5, some significant attributes are photo_sharing, cooking(higher than cluster 1), beauty, and fashion, which correlates to the segment of followers that are more active on social media, sharing food contents to audience on a daily basis. This could be a crowd of online influencers such as food bloggers that already have an established audience, which the company could reach out to for endorsement/promotions to gain consumers. Finally, cluster 6 have some interesting attributes such as college_uni, sports_playing, and online_gaming which are significant (above 2) comparing to the mean threshold we used (0.3) along with some attibutes like art and tv_film that is only a little above the threshold. This cluster correspond to college students who are interested in sports and gaming, which leans more in the male college student side but can still be inclusive of female college students as well. Furthermore, our clusters also share similar attributes as the loadings result in our PCA, which show that these segments are most likely true. 
