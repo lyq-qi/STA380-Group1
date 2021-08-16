@@ -11,6 +11,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # STA-380 Exercises
 
+Here is the github link: [STA-380 Exercises](https://github.com/lyq-qi/STA380-Group1)
+
 ## Green Buildings
 
 ###The goal
@@ -32,7 +34,7 @@ Do you agree with the conclusions of her on-staff stats guru?  If so, point to e
 
 We found many flaws in the analysis done by the "excel guru". We disagree with his figures as he only took the median of rent from both non-green and green building, then use the differences between the two to calculate extra revenue. He did not consider other factors that might be affecting the relationship between rent and green status which make his calculation inefficient. Furthermore, he only took into account the initial cost of 100 mil and the 5% premium, without considering other cost-benefits such as savings on electrcity and gas usage in a green building. Next we will show some analysis we did to look for confounding variables.
 
-```{r echo = FALSE}
+```{r include = FALSE}
 library(dplyr)
 library(ggplot2)
 library(tidyverse)
@@ -122,7 +124,7 @@ all_class + coord_cartesian(ylim=c(0,100))
 
 Since most green buildings are of class a, class a can be a confounding variable that is also a part of the reason why rent increases in respect to green status. To adjust that, we can hold the class variable constant across buildings, and compute median rent from those buildings. 
 
-Profit calculations when class_a eqauls to 1.
+#### Profit calculations when class_a eqauls to 1.
 
 ```{r echo = FALSE}
 #Create database that has only green buildings and one that has no green buildings
@@ -189,7 +191,7 @@ paste0("Expected payback period: ", round(paybackPeriod,2))
 
 ```
 
-Profit calculations when class_a eqauls to 0.
+#### Profit calculations when class_a equals to 0.
 
 ```{r echo = FALSE}
 #Create database that has only green buildings and one that has no green buildings
@@ -261,7 +263,7 @@ In conclusion, we suggest that the Austin real-estate developer should only comp
 
 Your task is to create a figure, or set of related figures, that tell an interesting story about flights into and out of Austin.  Provide a clear annotation/caption for each figure, but the figure should be more or less stand-alone, in that you shouldn't need many, many paragraphs to convey its meaning.  Rather, the figure together with a concise caption should speak for itself as far as possible. 
 
-```{r echo = FALSE}
+```{r include = FALSE}
 #Bring in libraries needed for this problem
 library(ggplot2)
 library(tidyverse)
@@ -516,7 +518,7 @@ In this problem, you will construct three different portfolios of exchange-trade
 
 Currency ETFs (20%) + Corporate Bonds ETFs (30%) + Equities ETFs (50%)
 
-```{r echo = FALSE, warning = FALSE}
+```{r include = FALSE, warning = FALSE}
 library(mosaic)
 library(quantmod)
 library(foreach)
@@ -566,7 +568,9 @@ sim1 = foreach(i=1:5000, .combine='rbind') %do% {
 	}
 	wealthtracker
 }
+```
 
+```{r echo = FALSE, warning = FALSE}
 # each row is a simulated trajectory
 # each column is a data
 hist(sim1[,n_days], 25)
@@ -602,7 +606,7 @@ ggplot(data=return_df) + geom_line(mapping=aes(x=num_days,y=day_profit)) +
 
 Currency ETFs (30%) + Corporate Bonds ETFs (50%) + Equities ETFs (20%)
 
-```{r ehco = FALSE, warning= FALSE}
+```{r include = FALSE, warning= FALSE}
 library(mosaic)
 library(quantmod)
 library(foreach)
@@ -652,7 +656,9 @@ sim2 = foreach(i=1:5000, .combine='rbind') %do% {
 	}
 	wealthtracker
 }
+```
 
+```{r echo = FALSE, warning = FALSE}
 # each row is a simulated trajectory
 # each column is a data
 
@@ -692,7 +698,7 @@ ggplot(data=return_df) + geom_line(mapping=aes(x=num_days,y=day_profit)) +
 
 Currency ETFs (50%) + Corporate Bonds ETFs (30%) + Equities ETFs (20%)
 
-```{r echo = FALSE, warning = FALSE}
+```{r include = FALSE, warning = FALSE}
 library(mosaic)
 library(quantmod)
 library(foreach)
@@ -742,7 +748,10 @@ sim3 = foreach(i=1:5000, .combine='rbind') %do% {
 	}
 	wealthtracker
 }
+```
 
+
+```{r echo = FALSE, warning = FALSE}
 # each row is a simulated trajectory
 # each column is a data
 hist(sim3[,n_days], 25)
@@ -784,7 +793,7 @@ Across the three portfolios, we can see that the return on average increases ove
 This was data collected in the course of a market-research study using followers of the Twitter account of a large consumer brand that shall remain nameless---let's call it "NutrientH20" just to have a label.  The goal here was for NutrientH20 to understand its social-media audience a little bit better, so that it could hone its messaging a little more sharply.Your task to is analyze this data as you see fit, and to prepare a concise report for NutrientH20 that identifies any interesting market segments that appear to stand out in their social-media audience.  You have complete freedom in deciding how to pre-process the data and how to define "market segment." (Is it a group of correlated interests?  A cluster?  A latent factor?  Etc.)  Just use the data to come up with some interesting, well-supported insights about the audience, and be clear about what you did.
 
 
-```{r echo = FALSE, warning = FALSE}
+```{r include = FALSE, warning = FALSE}
 library(dplyr)
 tweets <- read.csv("social_marketing.csv")
 tweets <- tweets[,-1]
@@ -843,6 +852,9 @@ pca_tweets <- PCA(tweets_scale,
                 scale.unit = FALSE,
                 graph = F, 
                 ncp = 10) #default: 5)
+```
+
+```{r echo = FALSE, warning = FALSE}
 summary(pca_tweets)
 ```
 
@@ -893,13 +905,14 @@ From above figure, we can choose 6 or 10 clusters.
 
 First, we will do a 6 cluster analysis. 
 
-```{r echo = FALSE, warning = FALSE}
+```{r include = FALSE, warning = FALSE}
 RNGkind(sample.kind = "Rounding") 
 #to get the set.seed numbers not changed everytime executed
 
 set.seed(101)
 tweets_cluster1 <- kmeans(tweets_scale1, centers = 6)
-
+```
+```{r echo = FALSE, warning = FALSE}
 fviz_cluster(tweets_cluster1, data = tweets_scale1)
 ```
 
@@ -1037,7 +1050,7 @@ Revisit the Reuters C50 corpus that we explored in class. Your task is to build 
 In the C50train directory, you have 50 articles from each of 50 different authors (one author per directory).  Use this training data (and this data alone) to build the model.  Then apply your model to predict the authorship of the articles in the C50test directory, which is about the same size as the training set.  Describe your data pre-processing and analysis pipeline in detail.
 
 
-```{r echo = FALSE, warning= FALSE}
+```{r include = FALSE, warning= FALSE}
 library(tm) 
 library(tidyverse)
 library(slam)
@@ -1048,7 +1061,7 @@ library(randomForest)
 
 ```
 
-```{r echo = FALSE, warning= FALSE}
+```{r include = FALSE, warning= FALSE}
 #Reading all Folders
 readerPlain = function(fname){
   readPlain(elem=list(content=readLines(fname)), 
@@ -1056,9 +1069,9 @@ readerPlain = function(fname){
 }
 ```
 
-In this section, we are processing the training data to eliminate stop words, removing punctuation, make terms lowercase and more. The end result is a document term matrix with tf-idf weights.
+In this section, we are processing the training data to eliminate stop words, removing punctuation, make terms lowercase and more. The end result is a document term matrix with tf-idf weights with 801 terms.
 
-```{r echo = FALSE, warning= FALSE}
+```{r include = FALSE, warning= FALSE}
 #set up train
 train=Sys.glob('ReutersC50/C50train/*')
 
@@ -1104,12 +1117,15 @@ DTM_train # now ~ 801 terms (versus ~32000 before)
 # as features in a predictive model
 tfidf_train = weightTfIdf(DTM_train)
 DTM_train <- as.matrix(tfidf_train) 
+```
+
+```{r echo = FALSE, warning= FALSE}
 tfidf_train 
 ```
 
 In this section, we do the same processing step we did for the training set to the testing set. 
 
-```{r echo = FALSE, warning= FALSE}
+```{r include = FALSE, warning= FALSE}
 #Repeat for test
 #set up test
 test=Sys.glob('ReutersC50/C50test/*')
@@ -1152,7 +1168,7 @@ my_documents1 = tm_map(my_documents1, content_transformer(removeWords), stopword
 DTM_test = DocumentTermMatrix(my_documents1)
 DTM_test # some basic summary statistics
 DTM_test = removeSparseTerms(DTM_test, 0.95) #removes those terms that have count 0 in >95% of docs.  
-DTM_test # now ~ 819 terms (versus ~32000 before)
+DTM_test # now ~ 816 terms (versus ~32000 before)
 ```
 
 Here we are getting rid of all the words that are in the testing set but not in the training set to make the two matrix the same length. 
@@ -1163,11 +1179,11 @@ Here we are getting rid of all the words that are in the testing set but not in 
 DTM_test=DocumentTermMatrix(my_documents1,list(dictionary=colnames(DTM_train)))
 tfidf_test = weightTfIdf(DTM_test)
 DTM_test<-as.matrix(tfidf_test) #Matrix
-tfidf_test #804 terms
+tfidf_test #801 terms
 ```
 ### Principal Component Analysis
 
-```{r echo = FALSE, warning= FALSE}
+```{r include = FALSE, warning= FALSE}
 ####
 # Dimensionality reduction
 ####
@@ -1190,7 +1206,7 @@ pca_ts = prcomp(DTM_test_1,scale=TRUE)
 
 In this section, we are trying to reduce the dimensions using PCA. We found that at PC159, around 50% of the variance is explained, therefore we use that as a cutoff for the number of features(PC) we pass in to our model. 
 
-```{r echo = FALSE, warning= FALSE}
+```{r include = FALSE, warning= FALSE}
 #Classification techniques 
 
 #classification setup
@@ -1231,7 +1247,7 @@ In this section, we tried different kinds of model for classifying the documents
 
 Use the data on grocery purchases and find some interesting association rules for these shopping baskets.  Pick your own thresholds for lift and confidence; just be clear what these thresholds are and how you picked them.  Do your discovered item sets make sense? Present your discoveries in an interesting and concise way.
 
-```{r echo = FALSE, warning= FALSE}
+```{r include = FALSE, warning= FALSE}
 library(tidyverse)
 library(arules)
 library(arulesViz)
@@ -1286,10 +1302,9 @@ summary(grotrans)
 
 ```{r include = FALSE, warning= FALSE}
 groc_rules = apriori(grotrans,parameter=list(support=.005, confidence=.1, maxlen=5))
-plot(groc_rules)
 ```
 
-```{r echo = FALSE, warning= FALSE}
+```{r echo = FALSE, warning = FALSE}
 plot(groc_rules)
 ```
 
