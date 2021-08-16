@@ -46,6 +46,11 @@ ggplot(items_count[1:20,], aes(x=item, y=total)) +
   labs(title="Top 10 Popular Groceries") + 
   theme(axis.text.x = element_text(angle=90,vjust = 0))
 ```
+
+```{r}
+knitr::include_graphics("GroceriesNetwork.png")
+```
+
 Whole Milk was by far the most popular grocery with a count near 2500.
 ```{r}
 df$user = factor(df$user)
