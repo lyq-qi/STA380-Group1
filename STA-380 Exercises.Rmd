@@ -343,12 +343,12 @@ ggplot(data=carr_delay_df) + geom_bar(mapping=aes(x=reorder(UniqueCarrier,arr_de
   ylab("Average Delay(minutes)") +ggtitle("Average Arrival Delay by Carrier")+ theme_economist()
 ``` 
 
-``` {r carrierAvg, echo = FALSE}
+``` {r, echo = FALSE}
 ggplot(data=carr_delay_df) + geom_bar(mapping=aes(x=reorder(UniqueCarrier,dep_delay_avg),y=dep_delay_avg), stat="identity",position="dodge", color = 'slateblue', fill="skyblue1") + 
   xlab("Carrier") + ylab("Average Delay(minutes)") + ggtitle("Average Departure Delay by Carrier") +theme_economist()
 ```
 
-``` {r carrierAvg, echo = FALSE}
+``` {r, echo = FALSE}
 #combine the plots to see how the arrival vs departure delays are per carrier to see if one carrier has more of one type
 test_data_long <- melt(carr_delay_df,id="UniqueCarrier")
 ggplot(data=test_data_long) + geom_bar(mapping=aes(x=UniqueCarrier,y=value,fill=variable), stat="identity",position="dodge") + ggtitle("Average Arrival and Departure Delay per Carrier")+xlab("Carrier") +
