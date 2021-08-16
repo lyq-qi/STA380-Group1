@@ -142,7 +142,7 @@ DTM_test_1 <- DTM_test[,which(colSums(DTM_test) != 0)]
 #PCA
 pca_tr = prcomp(DTM_train_1,scale=TRUE)
 pred_pca=predict(pca_tr,newdata = DTM_test_1)
-plot(pca,type='line')
+plot(pca_tr,type='line')
 plot(cumsum(pca_tr$sdev^2/sum(pca_tr$sdev^2)))
 #Majority (50%) var explained at PC159 so lets use that
 
