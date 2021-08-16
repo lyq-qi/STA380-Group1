@@ -58,8 +58,11 @@ summary(grotrans)
 ```{r}
 groc_rules = apriori(grotrans,parameter=list(support=.005, confidence=.1, maxlen=5))
 plot(groc_rules)
+```
+```{r}
 plot(groc_rules, method='two-key plot')
 ```
+
 From this scatter plot, we can see that the large majority of rules have support values less than 0.025 but a varying confidence. There also is a slight correlation that the larger lifts have lower confidences. We can see that the size of the rules are clustred in a way that lower support valued rules have larger rule sizes.
 
 ##Networks
