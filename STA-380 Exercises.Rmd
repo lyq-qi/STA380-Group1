@@ -1,0 +1,1034 @@
+---
+title: "STA380 - Exercises"
+author: "Shehzad Ali, Ishan Patel, Yanqi Liang, and Ping Zhang"
+date: "8/16/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# STA-380 Exercises
+
+## Green Buildings
+
+###The goal
+
+An Austin real-estate developer is interested in the possible economic impact of "going green" in her latest project: a new 15-story mixed-use building on East Cesar Chavez, just across I-35 from downtown.  Will investing in a green building be worth it, from an economic perspective?  The baseline construction costs are $100 million, with a 5% expected premium for green certification.
+
+The developer has had someone on her staff, who's been described to her as a "total Excel guru from his undergrad statistics course," run some numbers on this data set and make a preliminary recommendation.  Here's how this person described his process.
+
+>I began by cleaning the data a little bit.  In particular, I noticed that a handful of the buildings in the data set had very low occupancy rates (less than 10\% of available space occupied).  I decided to remove these buildings from consideration, on the theory that these buildings might have something weird going on with them, and could potentially distort the analysis.  Once I scrubbed these low-occupancy buildings from the data set, I looked at the green buildings and non-green buildings separately.  The median market rent in the non-green buildings was $25 per square foot per year, while the median market rent in the green buildings was $27.60 per square foot per year: about $2.60 more per square foot.  (I used the median rather than the mean, because there were still some outliers in the data, and the median is a lot more robust to outliers.)  Because our building would be 250,000 square feet, this would translate into an additional $250000 x 2.6 = $650000 of extra revenue per year if we build the green building.
+
+>Our expected baseline construction costs are $100 million, with a 5% expected premium for green certification.  Thus we should expect to spend an extra $5 million on the green building.  Based on the extra revenue we would make, we would recuperate these costs in $5000000/650000 = 7.7 years.  Even if our occupancy rate were only 90%, we would still recuperate the costs in a little over 8 years.  Thus from year 9 onwards, we would be making an extra $650,000 per year in profit.  Since the building will be earning rents for 30 years or more, it seems like a good financial move to build the green building.
+
+
+The developer listened to this recommendation, understood the analysis, and still felt unconvinced.  She has therefore asked you to revisit the report, so that she can get a second opinion.
+
+Do you agree with the conclusions of her on-staff stats guru?  If so, point to evidence supporting his case.  If not, explain specifically where and why the analysis goes wrong, and how it can be improved.  Do you see the possibility of confounding variables for the relationship between rent and green status?  If so, provide evidence for confounding, and see if you can also make a picture that visually shows how we might "adjust" for such a confounder.    _Tell your story mainly in pictures, with appropriate introductory and supporting text._  
+
+### Green Buildings Analysis
+
+We found many flaws in the analysis done by the "excel guru". We disagree with his figures as he only took the median of rent from both non-green and green building, then use the differences between the two to calculate extra revenue. He did not consider other factors that might be affecting the relationship between rent and green status which make his calculation inefficient. Furthermore, he only took into account the initial cost of 100 mil and the 5% premium, without considering other cost-benefits such as savings on electrcity and gas usage in a green building. Next we will show some analysis we did to look for confounding variables.
+
+```{r echo = FALSE}
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+library(ggalt)
+gb = read.csv("greenbuildings.csv")
+gb$net = as.factor(gb$net)
+gb$green_rating = as.factor(gb$green_rating)
+gb$LEED = as.factor(gb$LEED)
+gb$Energystar = as.factor(gb$Energystar)
+gb$renovated = as.factor(gb$renovated)
+gb$class_a = as.factor(gb$class_a)
+avg_age = median(gb[gb$green_rating == 1,]$age)
+```
+
+Here, we are doing some data exploratory analysis on the dataset to discover trends and correlations.
+
+```{r echo = FALSE}
+theme_set(theme_classic())
+
+g1 <- ggplot(gb, aes(Rent)) + scale_fill_brewer(palette = "Spectral") +                geom_histogram(aes(fill=stories),binwidth = 2, 
+                   col="black", 
+                   size=.1)
+
+g1 + facet_wrap( ~ green_rating) + 
+    labs(title="Distribution of rent across all buildings", y="Number of buildings", x="Rent")
+```
+
+```{r echo = FALSE}
+# Zoom in without deleting the points outside the limits.
+g1 + facet_wrap( ~ green_rating) + coord_cartesian(xlim=c(0,100)) +
+    labs(title="Distribution of rent across all buildings", subtitle="Rent below $100",
+    y="Number of buildings", x="Rent")
+```
+
+```{r echo = FALSE}
+# Zoom in to take a look at the extreme case.
+g1 + facet_wrap( ~ green_rating) + coord_cartesian(xlim=c(100,300),ylim=c(0,25)) +
+  labs(title="Distribution of rent across all buildings", subtitle="Rent above $100",
+    y="Number of buildings", x="Rent")
+```
+
+```{r echo = FALSE}
+g2 <- ggplot(gb, aes(leasing_rate)) + scale_fill_brewer(palette = "Spectral") +                geom_density(aes(fill=factor(green_rating)), alpha=0.8)
+g2 + facet_wrap( ~ green_rating) + 
+    labs(title="Distribution of leasing rate across all buildings", y="Density", x="Leasing Rate")
+```
+
+There are many factors that can have an effect on rent, like location, building quality, appliances and Other amenities, tenant/use mix, etc. Now we know that the target project is a new 15-story mixed-use building on East Cesar Chavez, just across I-35 from downtown. Since we have story information in the dataset, let's focus on the situation of 15-story buildings.
+
+From the graphic, we can conclude that among 15-story building:
+1.the average rent of green buildings is higher than that of non-green buildings;
+2.the average occupancy rate of green buildings is higher than that of non-green buildings;
+3.all green buildings have a class of a or b (however, does this bring extra cost)?
+
+```{r echo = FALSE}
+story15 = dplyr::filter(gb,stories==15)
+story15.class = story15 %>% filter(class_a == 0 & class_b == 0)
+
+theme_set(theme_bw())
+g3 <- ggplot(story15, aes(leasing_rate,Rent))
+g3 + geom_point(aes(col=green_rating, size=age)) + 
+     geom_encircle(aes(x=leasing_rate, y=Rent), 
+                data=story15.class, 
+                color="red", 
+                size=2, 
+                expand=0.08)
+```
+
+Here, we analyzed some variables that might be affecting the relationship between green status and rent.
+
+```{r echo = FALSE}
+#From this plot we can see that a majority of the green buildings are of class a
+classa_b = ggplot(data=gb) + geom_bar(mapping = aes(x=class_a, fill = green_rating),stat="count",position = "dodge")
+
+classa_b
+```
+
+Then we dived in on the relationship between class a and rent specifically and saw that class a building generally have a higher rent
+
+```{r echo = FALSE}
+all_class = ggplot(data=gb) + geom_boxplot(mapping = aes(x=class_a,y=Rent,color = green_rating))
+
+all_class + coord_cartesian(ylim=c(0,100))
+
+
+```
+
+Since most green buildings are of class a, class a can be a confounding variable that is also a part of the reason why rent increases in respect to green status. To adjust that, we can hold the class variable constant across buildings, and compute median rent from those buildings. 
+
+Profit calculations when class_a eqauls to 1.
+
+```{r echo = FALSE}
+#Create database that has only green buildings and one that has no green buildings
+greenOnly = gb %>% filter(green_rating == 1 & class_a == 1)
+nonGreen = gb %>% filter(green_rating == 0 & class_a == 1)
+
+#Calculate count, median rent, median leasing rate for green buildings
+greenCount <- greenOnly %>% summarise(n())
+medGreenCapacity <- greenOnly %>% summarise(median(leasing_rate)/100)
+medGreenRent <- greenOnly %>%   summarise(median(Rent))
+
+
+#Calculate count, median rent, median leasing rate for non-green buildings
+nonGreenCount <- nonGreen %>% summarise(n())
+medNonGreenCapacity <- nonGreen %>% summarise(median(leasing_rate)/100)
+medNonGreenRent <- nonGreen %>% summarise(median(Rent))
+
+#Calculate median gas and electric cost 
+medGasCost <- gb %>% summarise(median(Gas_Costs))
+medElectricCost <- gb %>% summarise(median(Electricity_Costs))
+
+#setSquareFootage for further calculations
+sqFt = 250000
+#Set a weight of .9 for green electric and gas cost since they use less than non-green buildings. 
+#This is a subjective number and can be changed with future research regarding how much will actually be saved
+greenCostWeighted = .9
+
+#Calculate expected rent, expense, and profit if our building was green
+#Weight rent by expected capacity and calculate rent by adding rent diff b/w green/non green buildings
+#and adding that to the median non green rent. 
+greenExpectedRent <- medGreenRent * medGreenCapacity * sqFt
+#Weight expenses by expected savings by using less resources
+greenExpectedExpense <- (sqFt * medGasCost * greenCostWeighted) + (sqFt * medElectricCost * greenCostWeighted)
+greenExpectedProfit <- greenExpectedRent - greenExpectedExpense
+
+#Calculate expected rent, expense, and profit if our building was not green. 
+#Weight rent by expected capacity and calculate rent by multiplying square feet by median rent of non green
+#buildings. Expected expenses was not weighted because they will use all resources.
+
+nonGreenExpectedRent <- medNonGreenRent * medNonGreenCapacity * sqFt
+nonGreenExpectedExpense <- (sqFt * medGasCost) + (sqFt * medElectricCost)
+nonGreenExpectedProfit <- nonGreenExpectedRent - nonGreenExpectedExpense
+
+#Calculate the expected profit difference if the building chose to be green
+buildingDiff <- greenExpectedProfit-nonGreenExpectedProfit
+
+
+#Set green premium so we can calculate expected payback period and long-haul profits
+options("scipen" = 100,"digits" = 4) #Gets rid of scientific notation
+greenCert <- 100000000 *.05
+
+paybackPeriod = greenCert/buildingDiff
+
+print("Report")
+paste0("Expected rent price for Green building: ",medGreenRent, " Expected rent price for Non-Green building:",medNonGreenRent )
+paste0("Expected leasing rate for Green building: ",medGreenCapacity, " Expected rent price for Non-Green building:",medNonGreenCapacity )
+paste0("Expected yearly rent for Green building: ",round(greenExpectedRent,2), " Expected yearly rent for Non-Green building:", round(nonGreenExpectedRent,2))
+paste0("Expected electric Rate for the building: ",medElectricCost, " Expected gas Rate for the building: ",medGasCost )
+paste0("Expected electric/gas usage for the Green building: ",greenCostWeighted, " Expected electric/gas usage for the Non-Green Building: 1" )
+paste0("Expected expenses for the Green building: ",round(greenExpectedExpense,2), " Expected expenses for the Non-Green building: ",round(nonGreenExpectedExpense,2 ))
+paste0("Expected profit for Green Building: ",round(greenExpectedProfit,2), " Expected profit for Non-Green Building: ",round(nonGreenExpectedProfit,2) )
+paste0("Expected profit difference between a green and non-green building: ", round(buildingDiff,2))
+paste0("Expected payback period: ", round(paybackPeriod,2))
+
+```
+
+Profit calculations when class_a eqauls to 0.
+
+```{r echo = FALSE}
+#Create database that has only green buildings and one that has no green buildings
+greenOnly = gb %>% filter(green_rating == 1 & class_a == 0)
+nonGreen = gb %>% filter(green_rating == 0 & class_a == 0)
+
+#Calculate count, median rent, median leasing rate for green buildings
+greenCount <- greenOnly %>% summarise(n())
+medGreenCapacity <- greenOnly %>% summarise(median(leasing_rate)/100)
+medGreenRent <- greenOnly %>%   summarise(median(Rent))
+
+
+#Calculate count, median rent, median leasing rate for non-green buildings
+nonGreenCount <- nonGreen %>% summarise(n())
+medNonGreenCapacity <- nonGreen %>% summarise(median(leasing_rate)/100)
+medNonGreenRent <- nonGreen %>% summarise(median(Rent))
+
+#Calculate median gas and electric cost 
+medGasCost <- gb %>% summarise(median(Gas_Costs))
+medElectricCost <- gb %>% summarise(median(Electricity_Costs))
+
+#setSquareFootage for further calculations
+sqFt = 250000
+#Set a weight of .9 for green electric and gas cost since they use less than non-green buildings. 
+#This is a subjective number and can be changed with future research regarding how much will actually be saved
+greenCostWeighted = .9
+
+#Calculate expected rent, expense, and profit if our building was green
+#Weight rent by expected capacity and calculate rent by adding rent diff b/w green/non green buildings
+#and adding that to the median non green rent. 
+greenExpectedRent <- medGreenRent * medGreenCapacity * sqFt
+#Weight expenses by expected savings by using less resources
+greenExpectedExpense <- (sqFt * medGasCost * greenCostWeighted) + (sqFt * medElectricCost * greenCostWeighted)
+greenExpectedProfit <- greenExpectedRent - greenExpectedExpense
+
+#Calculate expected rent, expense, and profit if our building was not green. 
+#Weight rent by expected capacity and calculate rent by multiplying square feet by median rent of non green
+#buildings. Expected expenses was not weighted because they will use all resources.
+
+nonGreenExpectedRent <- medNonGreenRent * medNonGreenCapacity * sqFt
+nonGreenExpectedExpense <- (sqFt * medGasCost) + (sqFt * medElectricCost)
+nonGreenExpectedProfit <- nonGreenExpectedRent - nonGreenExpectedExpense
+
+#Calculate the expected profit difference if the building chose to be green
+buildingDiff <- greenExpectedProfit-nonGreenExpectedProfit
+
+
+#Set green premium so we can calculate expected payback period and long-haul profits
+options("scipen" = 100,"digits" = 4) #Gets rid of scientific notation
+greenCert <- 100000000 *.05
+
+paybackPeriod = greenCert/buildingDiff
+
+print("Report")
+paste0("Expected rent price for Green building: ",medGreenRent, " Expected rent price for Non-Green building:",medNonGreenRent )
+paste0("Expected leasing rate for Green building: ",medGreenCapacity, " Expected rent price for Non-Green building:",medNonGreenCapacity )
+paste0("Expected yearly rent for Green building: ",round(greenExpectedRent,2), " Expected yearly rent for Non-Green building:", round(nonGreenExpectedRent,2))
+paste0("Expected electric Rate for the building: ",medElectricCost, " Expected gas Rate for the building: ",medGasCost )
+paste0("Expected electric/gas usage for the Green building: ",greenCostWeighted, " Expected electric/gas usage for the Non-Green Building: 1" )
+paste0("Expected expenses for the Green building: ",round(greenExpectedExpense,2), " Expected expenses for the Non-Green building: ",round(nonGreenExpectedExpense,2 ))
+paste0("Expected profit for Green Building: ",round(greenExpectedProfit,2), " Expected profit for Non-Green Building: ",round(nonGreenExpectedProfit,2) )
+paste0("Expected profit difference between a green and non-green building: ", round(buildingDiff,2))
+paste0("Expected payback period: ", round(paybackPeriod,2))
+```
+
+In conclusion, we suggest that the Austin real-estate developer should only compete in the non-class A market if they decided to make a green building. That is because a non-class A green building will generate more profit resulting in a shorter pay back period. 
+
+## Flights at ABIA
+
+Your task is to create a figure, or set of related figures, that tell an interesting story about flights into and out of Austin.  Provide a clear annotation/caption for each figure, but the figure should be more or less stand-alone, in that you shouldn't need many, many paragraphs to convey its meaning.  Rather, the figure together with a concise caption should speak for itself as far as possible. 
+
+```{r echo = FALSE}
+#Bring in libraries needed for this problem
+library(ggplot2)
+library(tidyverse)
+library(reshape2)
+library(ggthemes)
+#Read in the Airport data and drop NAs
+airport <- read.csv("ABIA.csv")
+attach(airport)
+airport[is.na(airport)] <- 0
+```
+
+### Airport Analysis
+
+First, we want to create a histogram with the arriving and departing flights at Austin-Bergstrom. This includes looking at flights that were not delayed. 
+
+```{r flightHisto, echo = FALSE, warning= FALSE}
+ggplot(data=airport)+geom_histogram(mapping=aes(x=ArrDelay),bins = 100,binwidth = 15,color = 'firebrick4', fill="tomato1") + 
+  xlab("Arrival Delay") + ggtitle("Arrival Delay Count") +xlim(-50,450) + ylim(0,80000)+ylab("Count") +
+  geom_vline(aes(xintercept  = mean(ArrDelay)), color = 'blue', linetype = 'dashed', size = 1) +theme_economist() +
+  annotate(x=mean(ArrDelay),y=+Inf,label="Average Delay",vjust=1,geom="label") 
+
+paste0("The average arrival delay is ",round(mean(airport$ArrDelay),2)," minutes.")
+```
+
+
+```{r echo = FALSE, warning= FALSE}
+ggplot(data=airport)+geom_histogram(mapping=aes(x=DepDelay),bins = 100,binwidth = 15,color = 'slateblue', fill="skyblue1") + 
+  xlab("Departure Delay") + ggtitle("Departure Delay Count") +xlim(-50,450) +ylim(0,80000) +ylab("Count") +
+  geom_vline(aes(xintercept  = mean(ArrDelay)), color = 'red', linetype = 'dashed', size = 1) + theme_economist() + 
+  annotate(x=mean(DepDelay),y=+Inf,label="Average Delay",vjust=1,geom="label") 
+
+paste0("The average departure delay is ",round(mean(airport$DepDelay),2)," minutes.")
+```
+
+As we can see from the arrival histogram, most flights coming into Austin-Bergstrom are on time/early or delayed by less than 10 minutes. The flight departure histogram shows there are more delays in departures than arrivals. The departing flights have a delay that is around 2 minutes longer than that of an arriving flight. 
+
+### Carrier Analysis
+
+Next, we want to analyze the performance of the carriers at Austin-Bergstrom Airport.
+
+
+``` {r carrierCount, echo = FALSE, warning = FALSE}
+ggplot(data=airport) + geom_histogram(mapping=aes(x=UniqueCarrier),stat="count", color = "darkorange4", fill = "tan2") + 
+  ggtitle("Flights in-and-out of Austin by Carrier") + xlab("Carrier") + ylab("Number of Flights") + theme_economist() 
+
+paste0("Southwest had the highest flight count at AIBA with ", sum(airport$UniqueCarrier == "WN"),".")
+paste0("Followed by American Airlines who had an AIBA flight count of ", sum(airport$UniqueCarrier == "AA"),".")
+paste0("The company with the least amount of flights at AIBA is Northwest Airlines with ",sum(airport$UniqueCarrier == "NW"), " flights.")
+```
+
+If I am an Austin resident looking to open an airline credit card, I would look closely at what Southwest offers since they have the most flights at AIBA.
+
+Let's take a look at the portion of flights delayed by each carrier.
+
+``` {r carrierNorm, echo = FALSE}
+carr_arrdelay_count <- airport %>% group_by(UniqueCarrier) %>% summarise(carrier_arr_prob = length(ArrDelay[ArrDelay>0])/length(ArrDelay))
+
+ggplot(data=carr_arrdelay_count) + geom_bar(mapping=aes(x=reorder(UniqueCarrier,carrier_arr_prob),y=carrier_arr_prob),stat="identity",position="dodge", color = 'firebrick4', fill = 'tomato1') +
+  xlab("Carrier") + ylab("Portion Delayed") +ggtitle("Carrier")+ theme_economist() +
+  ggtitle("Portion of Arriving Flights Delayed by Carrier")
+
+```
+
+```{r echo = FALSE, warning= FALSE}
+
+carr_depdelay_count <- airport %>% group_by(UniqueCarrier) %>% summarise(carrier_dep_prob = length(DepDelay[DepDelay>0])/length(DepDelay)) 
+ggplot(data=carr_depdelay_count) + geom_bar(mapping=aes(x=reorder(UniqueCarrier,carrier_dep_prob),y=carrier_dep_prob), stat="identity",position="dodge", color = 'slateblue', fill="skyblue1") +
+  xlab("Carrier") + ylab("Portion Delayed") + ggtitle("Portion of Departing Flights Delayed by Carrier") +theme_economist()
+
+```
+
+Not all delays are created equal. We must know the average time(minutes) that a carrier will delay a flight before we can make a judgement about which airline we want to avoid on future trips.
+
+``` {r carrierAvg, echo = FALSE}
+carr_delay_df <- airport %>% group_by(UniqueCarrier) %>%  summarise(arr_delay_avg = mean(ArrDelay[ArrDelay>0]),dep_delay_avg = mean(DepDelay[ArrDelay>0]))
+ggplot(data=carr_delay_df) + geom_bar(mapping=aes(x=reorder(UniqueCarrier,arr_delay_avg),y=arr_delay_avg),stat="identity",position="dodge", color = 'firebrick4', fill = 'tomato1') + xlab("Carrier") +
+  ylab("Average Delay(minutes)") +ggtitle("Average Arrival Delay by Carrier")+ theme_economist()
+``` 
+
+``` {r carrierAvg, echo = FALSE}
+ggplot(data=carr_delay_df) + geom_bar(mapping=aes(x=reorder(UniqueCarrier,dep_delay_avg),y=dep_delay_avg), stat="identity",position="dodge", color = 'slateblue', fill="skyblue1") + 
+  xlab("Carrier") + ylab("Average Delay(minutes)") + ggtitle("Average Departure Delay by Carrier") +theme_economist()
+```
+
+``` {r carrierAvg, echo = FALSE}
+#combine the plots to see how the arrival vs departure delays are per carrier to see if one carrier has more of one type
+test_data_long <- melt(carr_delay_df,id="UniqueCarrier")
+ggplot(data=test_data_long) + geom_bar(mapping=aes(x=UniqueCarrier,y=value,fill=variable), stat="identity",position="dodge") + ggtitle("Average Arrival and Departure Delay per Carrier")+xlab("Carrier") +
+  ylab("Average Delay(minutes)") + scale_fill_discrete("Flight type", labels = c("Arrival","Delay")) + theme_economist()
+
+```
+
+ExpressJet Airlines and Southwest Airlines have the highest portion of departing flights delayed, but ExpressJets' delays are around 10 minutes longer than Southwest delays. JetBlue is also intriguing because they are middle of the pack in terms of portion delayed, but their delays are avering over 30 minutes. US Airways has the shortest delays of any of the carriers(arrival and departure), but they have a pretty low flight count at Austin-Bergstrom, so chances are that we won't get many destination and time options to work with an airline like US Airways.
+
+A 10 minute delay can be a little annoying, but a 25 minute delay can ruin your plans. We want to look into which carrier is most likely to have a 25 minute delay.
+
+``` {r carrier25, echo = FALSE}
+carr_prob_df <- airport %>% group_by(UniqueCarrier) 
+carr_prob_df <- carr_prob_df %>% summarise(carr_delay_25 = length(CarrierDelay[CarrierDelay>25])/length(CarrierDelay))
+test_data_long2 <- melt(carr_prob_df,id="UniqueCarrier")
+ggplot(data=test_data_long2) + geom_bar(mapping=aes(x=reorder(UniqueCarrier,value),y=value),stat="identity",color ='darkgreen', fill = 'lightgreen') + ggtitle("Carrier Portion Delayed > 25 minutes") + ylab("Portion Delayed > 25 Minutes") + xlab("Carrier")
+```
+
+The portion of flights delayed more than 25 minutes is extremely low, but the airline with the highest portion delayed more than 25 minutes is Mesa Airlines. We don't believe that the portion of delays greater than 25 minutes is an important factor when planning a trip so we don't need to worry about a long delay messing up our itinerary. 
+
+### Carrier Conclusion
+
+Southwest and American Airlines have the most flights in-and-out of Austin-Bergstrom, therefore they will have the most time/route options of any carrier. Southwest is on the high-end of departure delays, but on the low-end in terms of arrival delays. If we had to choose between Southwest and American Airlines based on the data, we would choose American Airlines since they have a lower portion of departures getting delayed and their departure delays are shorter than Southwest. Leaving on time is more important to us than arriving on time. JetBlue and ExpressJet are airlines that we would avoid, but it won't be hard since they do not have many flight options at ABIA. 
+
+### Calendar Analysis
+
+First, lets examine at the number of flights per month at Austin-Bergstrom. 
+
+``` {r monthCount, echo = FALSE, warning = FALSE}
+ggplot(data=airport) + geom_histogram(mapping=aes(x=Month),stat="count",col =
+                                        c("navyblue","navyblue","greenyellow","greenyellow","greenyellow","gold2","gold2","gold2","sienna2","sienna2","sienna2","navyblue"),
+                                      fill = c("navyblue","navyblue","greenyellow","greenyellow","greenyellow","gold2","gold2","gold2","sienna2","sienna2","sienna2","navyblue")) + 
+                                      ggtitle("Total Flights per Month in-and-out of Austin") +scale_x_continuous( breaks=c(0,1,2,3,4,5,6,7,8,9,10,11,12)) +ylab("Flight Count") +
+                                      annotate(x=11,y=+Inf,label="Colored by Season",vjust=2,geom="label")
+```
+
+It is not surprising to see that the Spring and Summer have the highest flight count. We can not test this, but we believe Longhorn football is the reason for less flights in the Fall. 
+
+Texas weather can be hard to predict and changes so quickly, but we wanted to know which months have the most weather delays in Austin, Texas. 
+
+``` {r weatherAnalysis,echo = FALSE}
+weath_delay_df <- airport %>% group_by(Month) 
+weath_delay_df <- weath_delay_df %>% summarise(weath_delay_count = length(WeatherDelay[WeatherDelay>0])) 
+test_data_long3 <- melt(weath_delay_df,id="Month")
+ggplot(data=test_data_long3) + geom_bar(mapping=aes(x=Month,y=value),stat="identity",col =
+                                          c("navyblue","navyblue","olivedrab4","olivedrab4","olivedrab4","gold2","gold2","gold2","sienna2","sienna2","sienna2","navyblue"),fill =
+                                          c("navyblue","navyblue","olivedrab4","olivedrab4","olivedrab4","gold2","gold2","gold2","sienna2","sienna2","sienna2","navyblue")) +
+  scale_x_continuous(breaks=c(0,1,2,3,4,5,6,7,8,9,10,11,12)) + ggtitle("Weather Delays per Month") + ylab("Weather Delay Count") + annotate(x=11,y=+Inf,
+                                            label="Colored by Season",vjust=2,geom="label") + theme_economist()
+```
+March has the most amount of weather delays, followed by December and August. When looking at seasonality the Winter months have the most of weather delays, while Autum has the least amount. 
+
+Lastly, we want to investigate which months have the most delays and which months have the highest portion of delayed flights. 
+
+```{r monthDelayCount, echo = FALSE}
+month_deparr_df <- airport %>% group_by(Month) 
+month_deparr_df <- month_deparr_df %>% summarise(month_arr = length(ArrDelay[ArrDelay>0]),
+                                                 month_dep = length(DepDelay[DepDelay>0])) 
+test_data_long4 <- melt(month_deparr_df,id="Month")
+
+ggplot(data=month_deparr_df) + geom_bar(mapping=aes(x=Month,y=month_arr), stat="identity",position="dodge", color = 'firebrick4', fill = 'tomato1') + xlab("Month") + ylab("Delay Count") +
+  ggtitle("Arrival Delay Count by Month")+ theme_economist() + scale_x_continuous( breaks=c(0,1,2,3,4,5,6,7,8,9,10,11,12))
+```
+
+```{r echo = FALSE}
+ggplot(data=month_deparr_df) + geom_bar(mapping=aes(x=Month,y=month_dep), stat="identity",position="dodge", color = 'slateblue', fill="skyblue1") +  xlab("Month") + ylab("Delay Count") +
+  ggtitle("Departure Delays by Month") +theme_economist() + scale_x_continuous( breaks=c(0,1,2,3,4,5,6,7,8,9,10,11,12))
+```
+
+```{r echo = FALSE}
+ggplot(data=test_data_long4) + geom_bar(mapping=aes(x=Month,y=value,fill=variable),stat="identity",position="dodge") + scale_x_continuous( breaks=c(0,1,2,3,4,5,6,7,8,9,10,11,12)) +
+  ggtitle("Arrival and Departure Delays per Month") + ylab("Delay Count") + scale_fill_discrete("Flight type", labels = c("Arrival","Delay"))
+```
+
+March and June have the most delays, and that is not shocking since Spring Break and early Summer are huge travel times at Austin-Bergstrom. We are surprised at the amount of delays in December since that is a month with the second lowest flight count in-and-out of Austin, Texas. 
+
+Do a higher portion of flights get delayed in December? We want to test that question next. 
+
+``` {r monthDelayNorm, echo = FALSE}
+month_delay_prob_df <- airport %>% group_by(Month)
+month_delay_prob_df <- month_delay_prob_df %>% summarise(month_arr_prob = length(ArrDelay[ArrDelay>0])/length(ArrDelay),
+                                                          month_dep_prob = length(DepDelay[DepDelay>0])/length(DepDelay))
+test_data_long5 <- melt(month_delay_prob_df,id="Month")
+
+ggplot(data=month_delay_prob_df) + geom_bar(mapping=aes(x=Month,y=month_arr_prob), stat="identity",position="dodge", color = 'firebrick4', fill = 'tomato1') + xlab("Month") +
+  ylab("Portion Delayed") +ggtitle("Arrival Delay Portion per Month")+ theme_economist() +scale_x_continuous( breaks=c(0,1,2,3,4,5,6,7,8,9,10,11,12))
+```
+
+```{r echo = FALSE}
+ggplot(data=month_delay_prob_df) + geom_bar(mapping=aes(x=Month,y=month_dep_prob), stat="identity",position="dodge", color = 'slateblue', fill="skyblue1") + xlab("Month") +
+  ylab("Portion Delayed") + ggtitle("Departure Delay Portion per Month") +theme_economist() +scale_x_continuous( breaks=c(0,1,2,3,4,5,6,7,8,9,10,11,12))
+```
+
+```{r echo = FALSE}
+
+ggplot(data=test_data_long5) + geom_bar(mapping=aes(x=Month,y=value,fill=variable),stat="identity",position="dodge") +scale_x_continuous( breaks=c(0,1,2,3,4,5,6,7,8,9,10,11,12)) +
+  ggtitle("Portion of Flights Being Delayed per Month") + ylab("Portion Delayed") + scale_fill_discrete("Flight type", labels = c("Arrival","Delay"))
+```
+
+If you decide to fly out of Austin-Bergstrom in December, you have around a 50% chance of having your flight delayed. This graph adds validity to notion that airports around the holidays get crazy. They even made a movie about it called "Planes, Trains, and Automobiles".
+
+### Calendar Conclusion
+
+The Spring and Summer are the busiest seasons at ABIA. March(spring break) and June(school is finished) have the highest amount of delays, while December has the highest portion of delays. March is the month with the most amount of weather delays, but the Winter is the season with the most weather delays. In the future, we would like to revisit this dataset with more years so we can identify is March is typically a bad weather month in Austin or was March 2008 a bad weather month in Austin. The information we learned in the calendar section confirmed priors we had from our traveling experience, but it is nice to get confirmation. 
+
+### Destination Analysis
+
+We are interested to know where Austin residents are flying and how many of the popular destinations have a high portion of delayed flights.
+
+``` {r destFlightCount, echo = FALSE}
+dest_count <- airport %>% group_by(Dest) %>% filter(Dest != "AUS") %>% summarise(DestCount = n()) %>% arrange(desc(DestCount)) %>% slice(0:15)
+test_data_long7 <- melt(dest_count, id = "Dest")
+dest_delay <- airport %>% group_by(Dest) %>% filter(Dest != "AUS") %>% summarise(DestDelayProb = length(DepDelay[DepDelay>0])/length(DepDelay)) %>% arrange(desc(DestDelayProb))  %>% slice(0:15)
+test_data_long6 <- melt(dest_delay,id="Dest")
+
+
+ggplot(data=test_data_long7) + geom_bar(mapping=aes(x=reorder(Dest,value),y=value),
+                                            stat="identity",position="dodge", color = 'firebrick4', fill = 'tomato1') + xlab("Destination") + 
+  ylab("Flight Count to Destination") +ggtitle("Top 15 Destinations from ABIA")+ theme_economist()
+```
+
+```{r echo = FALSE}
+ggplot(data=test_data_long6) + geom_bar(mapping=aes(x=reorder(Dest,value),y=value),
+                                            stat="identity",position="dodge", color = 'slateblue', fill="skyblue1") + 
+  xlab("Destination") + ylab("Portion Delayed") + ggtitle("Top 15 Portion of Departing Flights Delayed by Destination") +theme_economist()
+```
+
+We have a large amount of flights that are in the state of Texas with 4 of the top 7 airport destinations being in Texas. When we look at the portion of flights delayed by destination, Houston(Hobby) and Newark are the only airports in the top 15 flight count and top 15 portion delayed. There is only 1 flight to Des Moines, Iowa and it was delayed, so that explains why it has a high portion of flights delayed.
+
+Nobody likes getting home later than expected, let's look at the arrival delays by flight origin location.
+
+``` {r arrFlightCount, echo = FALSE}
+arr_count <- airport %>% group_by(Origin) %>% filter(Origin != "AUS") %>% summarise(ArrCount = n()) %>% arrange(desc(ArrCount)) %>% slice(0:15)
+test_data_long8 <- melt(arr_count, id = 'Origin')
+arr_delay <- airport %>% group_by(Origin) %>% filter(Origin != "AUS") %>% summarise(ArrDelayProb = length(ArrDelay[ArrDelay>0])/length(ArrDelay)) %>% arrange(desc(ArrDelayProb)) %>% slice(0:15)
+test_data_long9 <- melt(arr_delay,id="Origin")
+
+
+ggplot(data=test_data_long8) + geom_bar(mapping=aes(x=reorder(Origin,value),y=value),
+                                        stat="identity",position="dodge", color = 'firebrick4', fill = 'tomato1') + xlab("Flight Origin Location") + 
+  ylab("Flight Count") +ggtitle("Top 15 Airports flying into Austin")+ theme_economist()
+```
+
+```{r echo = FALSE}
+ggplot(data=test_data_long9) + geom_bar(mapping=aes(x=reorder(Origin,value),y=value),
+                                        stat="identity",position="dodge", color = 'slateblue', fill="skyblue1") + 
+  xlab("Flight Origin Location") + ylab("Portion Delayed") + ggtitle("Top 15 Portion of Arriving Flights Delay by Origin") +theme_economist()
+```
+
+The arrival flight count looks pretty similar to the departure flight count. Newark is the only airport on both lists again! They need to get it together. 
+
+### Destination Analysis
+
+A large chunk of flights leaving Austin-Bergstrom end up staying in the state of Texas. Most of the popular flight routes are pretty efficient and do not have a large portion of flights being delayed(arrival and departure). You just might want to think twice before you book a flight to Newark, New Jersey. 
+
+## Portfolio Modeling 
+
+In this problem, you will construct three different portfolios of exchange-traded funds, or ETFs, and use bootstrap resampling to analyze the short-term tail risk of your portfolios. You should assume that your portfolios are rebalanced each day at zero transaction cost.  For example, if you're allocating your wealth evenly among 5 ETFs, you always redistribute your wealth at the end of each day so that the equal five-way split is retained, regardless of that day's appreciation/depreciation
+
+- Construct three different possibilities for an ETF-based portfolio, each involving an allocation of your $100,000 in capital to somewhere between 3 and 10 different ETFs.
+- Download the last five years of daily data on your chosen ETFs
+- Use bootstrap resampling to estimate the 4-week (20 trading day) value at risk of each of your three portfolios at the 5% level.  
+- Write a report summarizing your portfolios and your VaR findings.  
+
+
+### Portfolio (1) —— Aggressive Portfolio
+
+Currency ETFs (20%) + Corporate Bonds ETFs (30%) + Equities ETFs (50%)
+
+```{r echo = FALSE, warning = FALSE}
+library(mosaic)
+library(quantmod)
+library(foreach)
+
+mystocks = c("UUP", "FXE", "VCIT", "LQD", "FXI", "EWJ")
+myprices = getSymbols(mystocks, from = "2010-01-01")
+
+# A chunk of code for adjusting all stocks
+# creates a new object adding 'a' to the end
+for(ticker in mystocks) {
+	expr = paste0(ticker, "a = adjustOHLC(", ticker, ")")
+	eval(parse(text=expr))
+}
+
+# Combine all the returns in a matrix
+all_returns = cbind(ClCl(UUPa),
+								ClCl(FXEa),
+								ClCl(VCITa),
+								ClCl(LQDa),
+								ClCl(FXIa),
+								ClCl(EWJa))
+all_returns = as.matrix(na.omit(all_returns))
+
+
+library(foreach)
+# Now simulate many different possible futures
+# just repeating the above block thousands of times
+initial_wealth = 100000
+
+set.seed(1) #make sure we use same return every time running this model
+
+sim1 = foreach(i=1:5000, .combine='rbind') %do% {
+	total_wealth = initial_wealth
+	weights = c(0.1,0.1,0.15,0.15,0.25,0.25) #aggressive portfolio
+	holdings = weights * total_wealth
+	n_days = 20
+	wealthtracker = rep(0, n_days)
+	for(today in 1:n_days) {
+	  # Sample a random return from the empirical joint distribution
+    # This simulates a random day
+		return.today = resample(all_returns, 1, orig.ids=FALSE)
+		holdings = holdings + holdings*return.today
+		total_wealth = sum(holdings)
+		wealthtracker[today] = total_wealth
+		weights = c(0.1,0.1,0.15,0.15,0.25,0.25) #portfolios are rebalanced each day
+		holdings = weights * total_wealth #portfolios are rebalanced each day
+	}
+	wealthtracker
+}
+
+# each row is a simulated trajectory
+# each column is a data
+hist(sim1[,n_days], 25)
+```
+
+```{r echo = FALSE, warning = FALSE}
+# Profit/loss
+hist(sim1[,n_days]- initial_wealth, breaks=30)
+
+# 5% value at risk:
+paste0("5% value at risk is: ", quantile(sim1[,n_days]- initial_wealth, prob=0.05))
+```
+
+```{r echo = FALSE, warning = FALSE}
+# note: this is  a negative number (a loss, e.g. -500), but we conventionally
+# express VaR as a positive number (e.g. 500)
+
+# 95% value at risk:
+# paste0("95% value at risk is: ", quantile(sim1[,n_days]- initial_wealth, prob=0.95))
+
+#Return per day graph over the total time
+day_profit = c()
+for (i in 1:n_days){
+  day_profit[i] = mean(sim1[,i])
+}
+num_days=1:n_days
+return_df=data.frame(day_profit,num_days)
+ggplot(data=return_df) + geom_line(mapping=aes(x=num_days,y=day_profit)) +
+  ggtitle("Aggressive Portfolio Returns ") + xlab("Days") + ylab("Return ($)")
+```
+
+## Portfolio (2) —— Moderate Portfolio
+
+Currency ETFs (30%) + Corporate Bonds ETFs (50%) + Equities ETFs (20%)
+
+```{r ehco = FALSE, warning= FALSE}
+library(mosaic)
+library(quantmod)
+library(foreach)
+
+mystocks = c("UUP", "FXE", "VCIT", "LQD", "FXI", "EWJ")
+myprices = getSymbols(mystocks, from = "2010-01-01")
+
+# A chunk of code for adjusting all stocks
+# creates a new object adding 'a' to the end
+for(ticker in mystocks) {
+	expr = paste0(ticker, "a = adjustOHLC(", ticker, ")")
+	eval(parse(text=expr))
+}
+
+# Combine all the returns in a matrix
+all_returns = cbind(ClCl(UUPa),
+								ClCl(FXEa),
+								ClCl(VCITa),
+								ClCl(LQDa),
+								ClCl(FXIa),
+								ClCl(EWJa))
+all_returns = as.matrix(na.omit(all_returns))
+
+
+library(foreach)
+# Now simulate many different possible futures
+# just repeating the above block thousands of times
+initial_wealth = 100000
+
+set.seed(1) #make sure we use same return every time running this model
+
+sim2 = foreach(i=1:5000, .combine='rbind') %do% {
+	total_wealth = initial_wealth
+	weights = c(0.15,0.15,0.25,0.25,0.1,0.1) #moderate portfolio
+	holdings = weights * total_wealth
+	n_days = 20
+	wealthtracker = rep(0, n_days)
+	for(today in 1:n_days) {
+	  # Sample a random return from the empirical joint distribution
+    # This simulates a random day
+		return.today = resample(all_returns, 1, orig.ids=FALSE)
+		holdings = holdings + holdings*return.today
+		total_wealth = sum(holdings)
+		wealthtracker[today] = total_wealth
+		weights = c(0.15,0.15,0.25,0.25,0.1,0.1) #portfolios are rebalanced each day
+		holdings = weights * total_wealth #portfolios are rebalanced each day
+	}
+	wealthtracker
+}
+
+# each row is a simulated trajectory
+# each column is a data
+
+hist(sim2[,n_days], 25)
+```
+
+```{r echo = FALSE, warning = FALSE}
+# Profit/loss
+hist(sim2[,n_days]- initial_wealth, breaks=30)
+
+# 5% value at risk:
+paste0("5% value at risk is: ", quantile(sim2[,n_days]- initial_wealth, prob=0.05))
+
+# note: this is  a negative number (a loss, e.g. -500), but we conventionally
+# express VaR as a positive number (e.g. 500)
+
+# 95% value at risk:
+#quantile(sim2[,n_days]- initial_wealth, prob=0.95)
+#quantile(sim2[,n_days]- initial_wealth, prob=0.95)
+
+```
+
+```{r echo = FALSE, warning = FALSE}
+#Return per day graph over the total time
+day_profit = c()
+for (i in 1:n_days){
+  day_profit[i] = mean(sim2[,i])
+}
+num_days=1:n_days
+return_df=data.frame(day_profit,num_days)
+ggplot(data=return_df) + geom_line(mapping=aes(x=num_days,y=day_profit)) +
+  ggtitle("Moderate Portfolio Returns ") + xlab("Days") + ylab("Return ($)")
+
+```
+
+## Portfolio (3) —— Conservative Portfolio
+
+Currency ETFs (50%) + Corporate Bonds ETFs (30%) + Equities ETFs (20%)
+
+```{r echo = FALSE, warning = FALSE}
+library(mosaic)
+library(quantmod)
+library(foreach)
+
+mystocks = c("UUP", "FXE", "VCIT", "LQD", "FXI", "EWJ")
+myprices = getSymbols(mystocks, from = "2010-01-01")
+
+# A chunk of code for adjusting all stocks
+# creates a new object adding 'a' to the end
+for(ticker in mystocks) {
+	expr = paste0(ticker, "a = adjustOHLC(", ticker, ")")
+	eval(parse(text=expr))
+}
+
+# Combine all the returns in a matrix
+all_returns = cbind(ClCl(UUPa),
+								ClCl(FXEa),
+								ClCl(VCITa),
+								ClCl(LQDa),
+								ClCl(FXIa),
+								ClCl(EWJa))
+all_returns = as.matrix(na.omit(all_returns))
+
+
+library(foreach)
+# Now simulate many different possible futures
+# just repeating the above block thousands of times
+initial_wealth = 100000
+
+set.seed(1) #make sure we use same return every time running this model
+
+sim3 = foreach(i=1:5000, .combine='rbind') %do% {
+	total_wealth = initial_wealth
+	weights = c(0.25,0.25,0.15,0.15,0.1,0.1) #conservative portfolio
+	holdings = weights * total_wealth
+	n_days = 20
+	wealthtracker = rep(0, n_days)
+	for(today in 1:n_days) {
+	  # Sample a random return from the empirical joint distribution
+    # This simulates a random day
+		return.today = resample(all_returns, 1, orig.ids=FALSE)
+		holdings = holdings + holdings*return.today
+		total_wealth = sum(holdings)
+		wealthtracker[today] = total_wealth
+		weights = c(0.25,0.25,0.15,0.15,0.1,0.1) #portfolios are rebalanced each day
+		holdings = weights * total_wealth #portfolios are rebalanced each day
+	}
+	wealthtracker
+}
+
+# each row is a simulated trajectory
+# each column is a data
+hist(sim3[,n_days], 25)
+```
+
+```{r echo = FALSE, warning = FALSE}
+# Profit/loss
+hist(sim3[,n_days]- initial_wealth, breaks=30)
+
+# 5% value at risk:
+paste0("5% value at risk is: ",quantile(sim3[,n_days]- initial_wealth, prob=0.05))
+
+# note: this is  a negative number (a loss, e.g. -500), but we conventionally
+# express VaR as a positive number (e.g. 500)
+
+# 95% value at risk:
+#quantile(sim3[,n_days]- initial_wealth, prob=0.95)
+```
+
+```{r echo = FALSE, warning = FALSE}
+#Return per day graph over the total time
+day_profit = c()
+for (i in 1:n_days){
+  day_profit[i] = mean(sim3[,i])
+}
+num_days=1:n_days
+return_df=data.frame(day_profit,num_days)
+ggplot(data=return_df) + geom_line(mapping=aes(x=num_days,y=day_profit)) +
+  ggtitle("Safe Portfolio Returns ") + xlab("Days") + ylab("Return ($)")
+
+```
+
+### Portfolio Analysis
+
+Across the three portfolios, we can see that the return on average increases over the 20 days period. However, the aggressive model return vs days line graph fluctuate a little bit more then the other two portfolios. This can be seen on the VaR as well, while the aggressive portfolio has the highest average return, it also has the highest VaR at 5%. Comparing the returns and VaR of all three models, the moderate portfolio is the best option for us because it has a relatively high return that not too far from that of the aggressive model(100296.8 vs 100325.4) and a 5% VaR that is far lower then the of the aggressive model(2060.641 vs 4354.693). The conservative model on the other hand have the lowest VaR (1870.43) but the return (100203.6) is also the lowest therefore we don't think it is the best option comparing to the moderate model. 
+
+## Market Segmentation
+
+This was data collected in the course of a market-research study using followers of the Twitter account of a large consumer brand that shall remain nameless---let's call it "NutrientH20" just to have a label.  The goal here was for NutrientH20 to understand its social-media audience a little bit better, so that it could hone its messaging a little more sharply.Your task to is analyze this data as you see fit, and to prepare a concise report for NutrientH20 that identifies any interesting market segments that appear to stand out in their social-media audience.  You have complete freedom in deciding how to pre-process the data and how to define "market segment." (Is it a group of correlated interests?  A cluster?  A latent factor?  Etc.)  Just use the data to come up with some interesting, well-supported insights about the audience, and be clear about what you did.
+
+
+```{r echo = FALSE, warning = FALSE}
+library(dplyr)
+tweets <- read.csv("social_marketing.csv")
+tweets <- tweets[,-1]
+#filter out the rows with spam and adult because they can be bots
+tweets <- tweets %>% filter(spam == 0 & adult == 0) 
+#Drop spam and adult columns since they are all 0
+tweets <- tweets[,-35:-36] 
+```
+
+First, let's take a look at data correlation. Practically, if our data is not highly correlated, we might not need a PCA.
+As the graph shows, some of our variables are quite correlated.Thus, we can proceed to PCA and create a smaller subset of variables.
+
+```{r echo = FALSE, warning = FALSE}
+# Creating a correlation plot
+library(ggcorrplot)
+cormat <- round(cor(tweets), 2)
+ggcorrplot::ggcorrplot(cor(cormat), hc.order = TRUE)
+```
+
+### Principal Component Analysis
+
+```{r echo = FALSE, warning = FALSE}
+pr_out <-prcomp(tweets, center = TRUE, scale = TRUE) #Scaling data
+summary(pr_out)
+```
+
+```{r echo = FALSE, warning = FALSE}
+# The first principal component accounts for 13.14% of the data variance.
+# This is the highest proportion
+pr_var <-  pr_out$sdev ^ 2
+pve <- pr_var / sum(pr_var)
+plot(pve, xlab = "Principal Component", ylab = "Proportion of Variance Explained", ylim = c(0,1), type = 'b')
+```
+
+
+```{r echo = FALSE, warning = FALSE}
+# Cumulative PVE plot
+plot(cumsum(pve), xlab = "Principal Component", ylab = "Cumulative Proportion of Variance Explained", ylim =c(0,1), type = 'b')
+```
+
+
+```{r echo = FALSE, warning = FALSE}
+varimax(pr_out$rotation[, 1:6])
+```
+
+From the above PC summary, we can see that some PC have attributes that could fit in to the description of a specific segment such as PC1 which corresponds to an mid-aged population who have kids and are more traditional, and PC4 which corresponds to a population that is more health focused. With these information, we can compare and contrast with our clustering models later. 
+
+
+```{r echo = FALSE, warning = FALSE}
+library(tidyverse)
+library(FactoMineR)
+library(factoextra)
+
+tweets_scale <- scale(tweets)
+pca_tweets <- PCA(tweets_scale, 
+                scale.unit = FALSE,
+                graph = F, 
+                ncp = 10) #default: 5)
+summary(pca_tweets)
+```
+
+```{r echo = FALSE, warning = FALSE}
+plot.PCA(pca_tweets, 
+         choix = c("ind"),
+         habillage = 1,
+         select = "contrib5",
+         invisible = "quali")
+```
+
+```{r echo = FALSE, warning = FALSE}
+plot.PCA(pca_tweets, choix = c("var"))
+```
+
+```{r include = FALSE ,warning = FALSE}
+pca_dimdesc <- dimdesc(pca_tweets)
+pca_dimdesc$Dim.1
+```
+
+```{r echo = FALSE, warning = FALSE}
+#this part is to clean our data based on the pca outliers graph
+tweets_new <- tweets[-c(6551,2089,2984,3705,2204),] #get rid of outliers based on pca
+tweets_scale1 <- scale(tweets_new)
+```
+
+Identifying number of clusters we should generate.
+
+```{r echo = FALSE, warning = FALSE}
+RNGkind(sample.kind = "Rounding") #to get the set.seed numbers not changed everytime executed
+kmeansTunning <- function(data, maxK) {
+  withinall <- NULL
+  total_k <- NULL
+  for (i in 1:maxK) {
+    set.seed(101)
+    temp <- kmeans(data,i)$tot.withinss
+    withinall <- append(withinall, temp)
+    total_k <- append(total_k,i)
+  }
+  plot(x = total_k, y = withinall, type = "o", xlab = "Number of Cluster", ylab = "Total within")
+}
+
+# kmeansTunning(your_data, maxK = 5)
+kmeansTunning(tweets_scale1, maxK = 20)
+```
+
+From above figure, we can choose 6 or 10 clusters.
+
+First, we will do a 6 cluster analysis. 
+
+```{r echo = FALSE, warning = FALSE}
+RNGkind(sample.kind = "Rounding") 
+#to get the set.seed numbers not changed everytime executed
+
+set.seed(101)
+tweets_cluster1 <- kmeans(tweets_scale1, centers = 6)
+
+fviz_cluster(tweets_cluster1, data = tweets_scale1)
+```
+
+```{r include = FALSE, warning = FALSE}
+tweets_new$cluster1 <- tweets_cluster1$cluster
+tweets_new
+```
+
+```{r echo = FALSE, warning = FALSE}
+paste0("Cluster Breakdown")
+round(prop.table(table(tweets_new$cluster1)),2)
+tweets_new %>% 
+  group_by(cluster1) %>% 
+  summarise(count=n())
+```
+
+The biggest cluster is cluster #1, which account for around 57% out of 6 six clusters.
+
+### Clusters Profiling
+
+####Non-scaled clusters
+
+The characteristic summary of NutrientH20's Twitter followers in the same cluster are as follows (not scaled):
+
+Cluster 1: Highest photo_sharing
+Cluster 2: Highest photo_sharing, sports_fandom, food, religion, parenting
+Cluster 3: Highest travel, politics, news, photo_sharing, computers
+Cluster 4: Highest health_nutrition(10 points higher than 5), personal_fitness, cooking, outdoors, photo_sharing
+Cluster 5: Highest photo_sharing(highest among clusters), cooking (7 points higher than cluster 4),beauty, fashion,health_nutrition
+Cluster 6: Highest college_uni, online_gaming, photo_sharing,sports_playing
+
+```{r echo = FALSE, warning = FALSE}
+#the numbers are calculating the mean frequency of posts related to this certain interest/topic
+#For these clusters, we picked 2 as our threshold to evaluate the mean under each cluster, anything above 2 will be included as a trait of that cluster (minus chatter)
+#the threshold is picked based on the mean value of the freq values across all the clusters.(Around 1.6 so we rounded up to 2)
+#We also want to limit the traits to top 5 so we don't over analyze a cluster
+prof1=tweets_new %>% 
+      group_by(cluster1) %>% 
+      summarise_all('mean')
+paste0("The mean for all the values in the cluster is ",mean(as.matrix(prof1)))
+t(data.frame(prof1,row.names=1))
+```
+
+The above cluster is not scaled so we can find a lot of repetition of attributes between clusters, specifically photo_sharing which is present in all clusters most likely because photo_sharing is one of the most common attributes for tweets. Although still descriptive, some details might be left out. Next we will take a look at scaled clusters.
+
+#### Scaled clusters
+
+The characteristic summary of NutrientH20's Twitter followers in the same cluster are as follows (scaled):
+
+Cluster 1: Highest food, personal_fitness, out_doors, cooking, health_nutrition
+Cluster 2: Highest sports_fandom, food, school, religion, parenting
+Cluster 3: Highest travel, politics, news, automotive, computers
+Cluster 4: Highest health_nutrition(higher than 1), personal_fitness(higher than 1), outdoors(higher than 1), eco, food(higher than 1 lower than 2)
+Cluster 5: Highest photo_sharing, cooking (higher than cluster 1), beauty, fashion, music
+Cluster 6: Highest college_uni, online_gaming, art,sports_playing,tv_film
+
+```{r echo = FALSE, warning = FALSE}
+#For these clusters, we picked 0.3 (absolute value) as our threshold to evaluate the mean under each cluster, anything above 0.3 will be included as a trait of that cluster (minus chatter)
+#the threshold is picked based on the mean value of the values across all the clusters.(Around 0.28 so we rounded up to 0.3)
+#We also want to limit the traits to top 5 so we don't over analyze a cluster
+a=data.frame(tweets_scale1)
+a$cluster1 <- tweets_cluster1$cluster
+prof3=a %>% 
+      group_by(cluster1) %>% 
+      summarise_all('mean')
+paste0("The mean for all the values in the cluster is ",mean(as.matrix(prof3)))
+t(data.frame(prof3,row.names=1))
+```
+
+With the above two clusters formed based on scaled and non-scaled data, we found that the scaled clusters gives less overlaps of attributes between clusters and generally more informative attributes than the non-scaled one.
+
+Next, we will do a 10 cluster analysis.
+
+```{r echo = FALSE, warning = FALSE}
+RNGkind(sample.kind = "Rounding") 
+#to get the set.seed numbers not changed everytime executed
+
+set.seed(101)
+tweets_cluster2 <- kmeans(tweets_scale1, centers = 10)
+
+fviz_cluster(tweets_cluster2, data = tweets_scale1)
+```
+
+```{r include = FALSE, warning = FALSE}
+tweets_new$cluster2 <- tweets_cluster2$cluster
+tweets_new
+```
+
+
+```{r echo = FALSE, warning = FALSE}
+paste0("Cluster Breakdown")
+round(prop.table(table(tweets_new$cluster2)),2)
+library(dplyr)
+tweets_new %>% 
+  group_by(cluster2) %>% 
+  summarise(count=n())
+```
+
+The biggest cluster is cluster #8, which account for around 40% out of 10 clusters.
+
+### Clusters Profiling
+
+The characteristic summary of NutrientH20's Twitter followers in the same cluster are as follows (without chatter):
+
+Cluster 1: Highest cooking, photo_sharing, fashion, beauty
+Cluster 2: Highest sports_fandom, religion,food, parenting
+Cluster 3: Highest politics, travel, news
+Cluster 4: Highest health_nutrition, personal_nutrition, cooking
+Cluster 5: Highest photo_sharing, shopping
+Cluster 6: Highest tv_film, art
+Cluster 7: Highest sports_fandom, religion, food, parenting 
+Cluster 8: Highest health_nutrition, photo_sharing, current_events, travel
+Cluster 9: Highest dating, photo_sharing, school
+Cluster 10: Highest college_uni, online_gaming
+
+
+```{r echo = FALSE, warning = FALSE}
+prof2=tweets_new %>% 
+      group_by(cluster2) %>% 
+      summarise_all('mean')
+t(data.frame(prof2,row.names=1))
+```
+
+Here we repeat the same process as we did for 6 clusters using non-scaled data and we can see that each cluster became more specific and smaller. This made it more difficult to identify what segment of the market the clusters could be refering to thus we pick 6 clusters as our optimal cluster. 
+
+### Market Segmentation Analysis 
+
+Based on the 6 clusters(scaled), we found that cluster one correspond to a more generalized segment of twitter followers with attributes that you would expect from someone who follows the company and you don't see any outstanding attributes, all of their numbers are close to the mean with nothing above 0.5. From cluster 2, we can see that parenting and religion is the top 2 attributes (above 2) listed along with other attributes that are also significant (above 1), this corresponds to the segment of twitter followers who are mid-aged, have kids, and have a more traditional life style. Cluster 3's top attributes are political, news, travel, automotives, and computers, where political and news takes the lead among these attributes. This segment of followers are likely those who are interested in political topics and what is going on in the world, also might be more interested in the cars and the IT realm. All of these attributes align with upper middle class males who has a more luxurious life style and invest in their hobbies. In cluster 4, we identify attributes such as health_nutrition, personal_fitness, outdoors which appears in cluster 1 but have a higher frequency than cluster 1. Eco was also a significant attribute in this cluster. From these attributes, we can see that this segment of followers are those who are more active in their daily life, more aware of the environment, and lead a healthy lifestyle. From cluster 5, some significant attributes are photo_sharing, cooking(higher than cluster 1), beauty, and fashion, which correlates to the segment of followers that are more active on social media, sharing food contents to audience on a daily basis. This could be a crowd of online influencers such as food bloggers that already have an established audience, which the company could reach out to for endorsement/promotions to gain consumers. Finally, cluster 6 have some interesting attributes such as college_uni, sports_playing, and online_gaming which are significant (above 2) comparing to the mean threshold we used (0.3) along with some attibutes like art and tv_film that is only a little above the threshold. This cluster correspond to college students who are interested in sports and gaming, which leans more in the male college student side but can still be inclusive of female college students as well. Furthermore, our clusters also share similar attributes as the loadings result in our PCA, which show that these segments are most likely true. 
+
+
+
+
