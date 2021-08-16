@@ -2,7 +2,7 @@
 title: "STA380 - Exercises"
 author: "Shehzad Ali, Ishan Patel, Yanqi Liang, and Ping Zhang"
 date: "8/16/2021"
-output: pdf_document
+output: md_document
 ---
 
 ```{r setup, include=FALSE}
