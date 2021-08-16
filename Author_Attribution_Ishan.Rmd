@@ -13,9 +13,12 @@ library(tm)
 library(tidyverse)
 library(slam)
 library(proxy)
+library(e1071)
+library(caret)
+library(randomForest)
 ```
 
-```{r}
+```{r, include = FALSE}
 #Reading all Folders
 readerPlain = function(fname){
   readPlain(elem=list(content=readLines(fname)), 
@@ -23,15 +26,16 @@ readerPlain = function(fname){
 }
 ```
 
+#In this section, we are processing the training data to eliminate stop words, removing punctuations, make terms lowercase and more. The end result is a document term matrix with tf-idf weights.
 ```{r}
 #set up train
-train=Sys.glob('~/Desktop/School/UT/Grad/MSBA/Summer/Intro to Machine Learning/2nd Half/data/ReutersC50/C50train/*')
+train=Sys.glob('ReutersC50/C50train/*')
 
 #get all the files
 file_list = NULL
 labels = NULL
 for(author in train) {
-  author_name = substring(author, first=29)
+  author_name = strsplit(author, "/")[[1]][3]
   files_to_add = Sys.glob(paste0(author, '/*.txt'))
   file_list = append(file_list, files_to_add)
   labels = append(labels, rep(author_name, length(files_to_add)))
@@ -66,7 +70,7 @@ DTM_train = DocumentTermMatrix(my_documents)
 DTM_train # some basic summary statistics
 DTM_train = removeSparseTerms(DTM_train, 0.95) #removes those terms that have count 0 in >95% of docs.  
 DTM_train # now ~ 804 terms (versus ~32000 before)
-
+col_train = colnames(DTM_train)
 # construct TF IDF weights -- might be useful if we wanted to use these
 # as features in a predictive model
 tfidf_train = weightTfIdf(DTM_train)
@@ -74,16 +78,17 @@ DTM_train <- as.matrix(tfidf_train)
 tfidf_train
 ```
 
+#In this section, we do the same processing step we did for the training set to the testing set. 
 ```{r}
 #Repeat for test
 #set up test
-test=Sys.glob('~/Desktop/School/UT/Grad/MSBA/Summer/Intro to Machine Learning/2nd Half/data/ReutersC50/C50test/*')
+test=Sys.glob('ReutersC50/C50test/*')
 
 #get all the files
 file_list1 = NULL
 labels1 = NULL
 for(author in test) {
-  author_name1 = substring(author, first=29)
+  author_name1 = strsplit(author, "/")[[1]][3]
   files_to_add1 = Sys.glob(paste0(author, '/*.txt'))
   file_list1 = append(file_list1, files_to_add1)
   labels1 = append(labels1, rep(author_name1, length(files_to_add1)))
@@ -120,6 +125,7 @@ DTM_test = removeSparseTerms(DTM_test, 0.95) #removes those terms that have coun
 DTM_test # now ~ 819 terms (versus ~32000 before)
 ```
 
+#Here we are getting rid of all the words that are in the testing set but not in the training set and make the two matrix the same length. 
 ```{r}
 #Since train and test are different lengths, make the test length the same as the train 
 #Construct TFIDF for test
@@ -129,7 +135,7 @@ DTM_test<-as.matrix(tfidf_test) #Matrix
 tfidf_test #804 terms
 ```
 
-
+#In this section, we are trying to reduce the dimensions using PCA. We found that at PC159, around 50% of the variance is explained, therefore we use that as a cutoff for the number of features(PC) we pass in to our model. 
 ```{r}
 ####
 # Dimensionality reduction
@@ -144,11 +150,13 @@ pca_tr = prcomp(DTM_train_1,scale=TRUE)
 pred_pca=predict(pca_tr,newdata = DTM_test_1)
 plot(pca_tr,type='line')
 plot(cumsum(pca_tr$sdev^2/sum(pca_tr$sdev^2)))
+summary(pca_tr)$importance[,159]
 #Majority (50%) var explained at PC159 so lets use that
 
 pca_ts = prcomp(DTM_test_1,scale=TRUE)
-```
 
+```
+#In this section, we tried different kinds of model for classfying the documents. The random forest model had the highest accuracy which is around 75%
 ```{r}
 #Classification techniques 
 
@@ -156,38 +164,28 @@ pca_ts = prcomp(DTM_test_1,scale=TRUE)
 tr = data.frame(pca_tr$x[,1:159]) #x-variables
 tr['labels']=labels #y-variable
 ts <- data.frame(pca_ts$x[,1:159]) #x-variables
-ts['labels1']=labels1 #y-variable
+ts['labels1']=as.factor(labels1) #y-variable
 ```
 
 ```{r}
 #Naive-Bayes
 
-library(e1071)
 set.seed(848484)
 nbay = naiveBayes(formula = as.factor(labels) ~ ., data = tr, 
                   laplace = 1)
 pred_nbay = predict(nbay, ts, type="class")
-author<-as.factor(ts$labels1)
-acc_df<-as.data.frame(cbind(author,pred_nbay))
-acc_df$same<-ifelse(acc_df$author==acc_df$pred_nbay,1,0)
-nbay_acc = sum(acc_df$same)/nrow(acc_df)
-nbay_acc
-#3.4%
+confusionMatrix(pred_nbay,ts$labels1)$overall['Accuracy']
+#1.9% accuracy, therefore its a bad model and we want to move on to another modeling technique
 ```
 
 ```{r}
 #Random Forest Technique
 
-library(randomForest)
 set.seed(848484)
 rf<-randomForest(as.factor(labels)~.,data=tr, mtry=5,importance=TRUE)
 pred_rf<-predict(rf,data=ts,type="class")
-author<-as.factor(ts$labels1)
-acc_df<-as.data.frame(cbind(author,pred_rf))
-acc_df$same<-ifelse(acc_df$author==acc_df$pred_rf,1,0)
-rf_acc = sum(acc_df$same)/nrow(acc_df)
-rf_acc
-#74.48%
+confusionMatrix(pred_rf,ts$labels1)$overall['Accuracy']
+#74.56%, the Random Forest model is the best model we found.
 ```
 
 
