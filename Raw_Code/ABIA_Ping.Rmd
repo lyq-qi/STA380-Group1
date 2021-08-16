@@ -1,0 +1,75 @@
+---
+title: "R_HW_2_ABIA"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+install.packages('ggplot2')
+install.packages('ggthemes')
+```
+
+```{r}
+ABIA <- read.csv("ABIA.csv")
+```
+
+Figure 1: Which months have the most cancelled flights? And which day of the week have the most cancelled flights?
+```{r}
+library(ggplot2)
+theme_set(theme_bw())
+
+cancelled = ABIA %>% filter(Cancelled == 1)
+ABIA$Month <- as.factor(ABIA$Month)
+ABIA$DayOfWeek <- as.factor(ABIA$DayOfWeek)
+
+g1 <- ggplot(cancelled, aes(Month))
+g1 + geom_bar(aes(fill=DayOfWeek), width = 0.5) + 
+  theme(axis.text.x = element_text(angle=65, vjust=0.6)) +
+  labs(title="Number of Cancellations at ABIA Airport in 2008", 
+       subtitle="Which month and which day of the week is the most likely to encounter a flight cancellation?", 
+       y="Number of Flight Cancelled",
+       x="Month",
+       caption="Source: Cancellation From 'ABIA' dataset")
+```
+
+Figure 2: Which months have the most cancelled flights? And which days of the week have the most cancelled flights?
+```{r}
+library(ggplot2)
+AUS.DFW = ABIA %>% filter((Origin=="AUS"|Origin=="DFW")&(Dest=="AUS"|Dest=="DFW"))
+AUS.DFW = na.omit(AUS.DFW)
+
+g2 <- ggplot(AUS.DFW, aes(x=ArrDelay, y=DepDelay)) + 
+      geom_point() + 
+      labs(title="Arrival Delay vs Departure Delay (AUS-DFW)",
+           subtitle="Longer Arrival Delay? Or Longer Departure Delay?",
+           caption = "Source: Delay Information From 'ABIA' dataset",
+           y="Departure Delay (in mins)", x="Arrival Delay (in mins)") +
+      geom_smooth(method="lm", se=FALSE) + 
+      theme_bw()
+
+g2 + facet_wrap(~Month) + coord_cartesian(xlim=c(0,200),ylim=c(0,200)) #zoom in 0-200mins
+
+g2 + facet_wrap(~DayOfWeek) + coord_cartesian(xlim=c(0,200),ylim=c(0,200)) #zoom in 0-200mins
+```
+
+Figure 3: Carrier delay of each individual airline company, and group it by day of week.
+```{r}
+library(ggplot2)
+library(ggthemes)
+
+carrier.delay = ABIA %>% filter(CarrierDelay > 0)
+carrier.delay = na.omit(carrier.delay)
+carrier.delay$UniqueCarrier = as.factor(carrier.delay$UniqueCarrier)
+
+g3 <- ggplot(carrier.delay, aes(UniqueCarrier, CarrierDelay))
+g3 <- g3 + geom_boxplot(aes(fill=DayOfWeek)) + 
+      theme(axis.text.x = element_text(angle=65, vjust=0.6)) + 
+      labs(title="Carrier Delay of Each Individual Airline Company", 
+           subtitle="Grouped by Each Day of the Week",
+           caption="Source: Delay Information From 'ABIA' dataset",
+           x="Airline Company",
+           y="Carrier Delay (in mins)") 
+
+g3 #original box plot
+g3 + coord_cartesian(ylim=c(0,500)) #zoom in 0-500mins
+```
