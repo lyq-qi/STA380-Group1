@@ -2,7 +2,7 @@
 title: "STA380 - Exercises"
 author: "Shehzad Ali, Ishan Patel, Yanqi Liang, and Ping Zhang"
 date: "8/16/2021"
-output: md_document
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
@@ -15,7 +15,7 @@ Here is the github link: [STA-380 Exercises](https://github.com/lyq-qi/STA380-Gr
 
 ## Green Buildings
 
-###The goal
+### The goal
 
 An Austin real-estate developer is interested in the possible economic impact of "going green" in her latest project: a new 15-story mixed-use building on East Cesar Chavez, just across I-35 from downtown.  Will investing in a green building be worth it, from an economic perspective?  The baseline construction costs are $100 million, with a 5% expected premium for green certification.
 
@@ -933,7 +933,7 @@ The biggest cluster is cluster #1, which account for around 57% out of 6 six clu
 
 ### Clusters Profiling
 
-####Non-scaled clusters
+#### Non-scaled clusters
 
 The characteristic summary of NutrientH20's Twitter followers in the same cluster are as follows (not scaled):
 

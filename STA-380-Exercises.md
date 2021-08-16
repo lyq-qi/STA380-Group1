@@ -5,7 +5,7 @@ Exercises](https://github.com/lyq-qi/STA380-Group1)
 
 ## Green Buildings
 
-\#\#\#The goal
+### The goal
 
 An Austin real-estate developer is interested in the possible economic
 impact of “going green” in her latest project: a new 15-story mixed-use
@@ -646,7 +646,7 @@ The biggest cluster is cluster \#1, which account for around 57% out of
 
 ### Clusters Profiling
 
-\#\#\#\#Non-scaled clusters
+#### Non-scaled clusters
 
 The characteristic summary of NutrientH20’s Twitter followers in the
 same cluster are as follows (not scaled):
