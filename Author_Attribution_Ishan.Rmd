@@ -160,21 +160,6 @@ ts['labels1']=labels1 #y-variable
 ```
 
 ```{r}
-#Random Forest Technique
-
-library(randomForest)
-set.seed(848484)
-rf<-randomForest(as.factor(labels)~.,data=tr, mtry=5,importance=TRUE)
-pred_rf<-predict(rf,data=ts,type="class")
-author<-as.factor(ts$labels1)
-acc_df<-as.data.frame(cbind(author,pred_rf))
-acc_df$same<-ifelse(acc_df$author==acc_df$pred_rf,1,0)
-rf_acc = sum(acc_df$same)/nrow(acc_df)
-rf_acc
-#74.48%
-```
-
-```{r}
 #Naive-Bayes
 
 library(e1071)
@@ -189,4 +174,21 @@ nbay_acc = sum(acc_df$same)/nrow(acc_df)
 nbay_acc
 #3.4%
 ```
+
+```{r}
+#Random Forest Technique
+
+library(randomForest)
+set.seed(848484)
+rf<-randomForest(as.factor(labels)~.,data=tr, mtry=5,importance=TRUE)
+pred_rf<-predict(rf,data=ts,type="class")
+author<-as.factor(ts$labels1)
+acc_df<-as.data.frame(cbind(author,pred_rf))
+acc_df$same<-ifelse(acc_df$author==acc_df$pred_rf,1,0)
+rf_acc = sum(acc_df$same)/nrow(acc_df)
+rf_acc
+#74.48%
+```
+
+
 
